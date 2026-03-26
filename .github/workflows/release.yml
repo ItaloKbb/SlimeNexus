@@ -110,8 +110,6 @@ jobs:
           --packVersion "${{ needs.validate-tag.outputs.version }}"
           --packDir "publish/${{ matrix.rid }}"
           --outputDir "installer/releases/${{ matrix.rid }}"
-          --icon "src/SlimeNexus.UI/Assets/icon.ico"
-          --appName "${{ env.APP_NAME }}"
 
       - name: ⬆️ Upload release artifacts (${{ matrix.rid }})
         uses: actions/upload-artifact@v4
