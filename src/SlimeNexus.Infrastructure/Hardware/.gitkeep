@@ -1,0 +1,9 @@
+// ─── Infrastructure placeholder files ────────────────────────────────────────
+// Hardware monitoring stub — will be backed by LibreHardwareMonitor at runtime.
+// Full implementation goes here; this file marks the layer boundary.
+
+namespace SlimeNexus.Infrastructure.Hardware;
+
+// TODO: Implement IHardwareMonitor using LibreHardwareMonitorLib.
+// Priority: AMD RDNA 2/3 GPU sensors (RX 6750 XT and similar cards).
+// Reference: https://github.com/LibreHardwareMonitor/LibreHardwareMonitor

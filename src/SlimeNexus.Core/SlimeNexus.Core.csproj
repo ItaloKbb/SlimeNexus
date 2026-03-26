@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <RootNamespace>SlimeNexus.Core</RootNamespace>
+    <AssemblyName>SlimeNexus.Core</AssemblyName>
+    <!-- No external dependencies: Core is pure domain logic -->
+  </PropertyGroup>
+
+</Project>
