@@ -77,14 +77,6 @@ jobs:
             runner: windows-latest
             artifact_ext: exe
             velopack_os: win
-          - rid: linux-x64
-            runner: ubuntu-latest
-            artifact_ext: AppImage
-            velopack_os: linux
-          - rid: osx-x64
-            runner: macos-latest
-            artifact_ext: dmg
-            velopack_os: osx
 
     steps:
       - name: ⬇️ Checkout repository
@@ -122,6 +114,14 @@ jobs:
           --packDir "publish/${{ matrix.rid }}"
           --outputDir "installer/releases/${{ matrix.rid }}"
           --mainExe "SlimeNexus.exe"
+
+      - name: 🪟 Normalize Windows installer filename
+        if: matrix.rid == 'win-x64'
+        shell: pwsh
+        run: |
+          $setup = Get-ChildItem "installer/releases/${{ matrix.rid }}" -Filter "*-win-Setup.exe" | Select-Object -First 1
+          if (-not $setup) { throw "Windows setup executable not found." }
+          Copy-Item $setup.FullName "installer/releases/${{ matrix.rid }}/win64x-Slimenexus.exe" -Force
 
       - name: ⬆️ Upload release artifacts (${{ matrix.rid }})
         uses: actions/upload-artifact@v4
@@ -165,12 +165,10 @@ jobs:
             Cross-platform desktop agent that bridges your Slime Tamagotchi with local AI.
 
             ### 📥 Downloads
-
+            
             | Platform | File |
             |---------|------|
-            | 🪟 Windows | `SlimeNexus-Setup.exe` |
-            | 🐧 Linux   | `SlimeNexus-linux.AppImage` |
-            | 🍎 macOS   | `SlimeNexus-mac.dmg` |
+            | 🪟 Windows | `win64x-Slimenexus.exe` |
 
             ### ⚠️ Requirements
             - [Ollama](https://ollama.ai/) with `llama3` model
