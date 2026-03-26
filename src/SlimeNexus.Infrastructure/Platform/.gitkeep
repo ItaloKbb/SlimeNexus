@@ -1,0 +1,11 @@
+// Platform-specific implementations.
+// Windows: tray icon, registry autostart, WMI hardware queries.
+// Linux:   AppIndicator, systemd service, sysfs GPU sensors.
+// Mac:     NSStatusItem, LaunchAgent, IOKit GPU sensors.
+
+namespace SlimeNexus.Infrastructure.Platform;
+
+// Separate partial classes or strategy implementations per OS are placed in:
+//   Platform/Windows/
+//   Platform/Linux/
+//   Platform/Mac/

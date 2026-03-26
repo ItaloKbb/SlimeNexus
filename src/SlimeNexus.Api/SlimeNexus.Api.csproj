@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <RootNamespace>SlimeNexus.Api</RootNamespace>
+    <AssemblyName>SlimeNexus.Api</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\SlimeNexus.Core\SlimeNexus.Core.csproj" />
+    <ProjectReference Include="..\SlimeNexus.Infrastructure\SlimeNexus.Infrastructure.csproj" />
+  </ItemGroup>
+
+</Project>

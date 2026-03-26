@@ -1,0 +1,9 @@
+// Minimal API endpoints — all scoped to localhost to avoid external exposure.
+// Register endpoints via IEndpointRouteBuilder extension methods in Endpoints/.
+
+namespace SlimeNexus.Api.Endpoints;
+
+// TODO: SlimeEndpoints    — GET /slime/status, GET /slime/tasks
+// TODO: TaskEndpoints     — POST /tasks/{id}/complete
+// TODO: HardwareEndpoints — GET /hardware/status
+// TODO: AiEndpoints       — POST /ai/generate

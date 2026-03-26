@@ -1,0 +1,7 @@
+// AI provider stubs — Ollama/Llama 3 and OpenClaw implementations go here.
+// Each provider implements SlimeNexus.Core.Domain.Interfaces.IAiProvider.
+
+namespace SlimeNexus.Infrastructure.AI;
+
+// TODO: Implement OllamaProvider (HTTP client to localhost:11434)
+// TODO: Implement OpenClawProvider

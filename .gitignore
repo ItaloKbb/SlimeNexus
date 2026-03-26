@@ -1,0 +1,127 @@
+## ============================================================
+## .gitignore — SlimeNexus (.NET 9 / Visual Studio / Velopack)
+## ============================================================
+
+# ─── .NET Build Outputs ──────────────────────────────────────
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+[Ll]ogs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# ─── .NET Runtime & Packages ─────────────────────────────────
+.nuget/
+packages/
+*.nupkg
+*.snupkg
+project.lock.json
+project.fragment.lock.json
+artifacts/
+
+# ─── Visual Studio ───────────────────────────────────────────
+.vs/
+*.vsp
+*.vspx
+*.sap
+*.vssettings
+*.[Rr]e[Ss]harper
+*.DotSettings.user
+.idea/
+*.ncb
+*.opensdf
+*.sdf
+*.cachefile
+*.VC.db
+*.VC.VC.opendb
+
+# ─── Visual Studio Code ──────────────────────────────────────
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# ─── Rider ───────────────────────────────────────────────────
+.idea/
+*.sln.iml
+
+# ─── Native AOT / Publish Outputs ────────────────────────────
+publish/
+*.ilk
+*.pdb
+*.exp
+*.lib
+*.map
+
+# ─── Velopack / Installer Artifacts ──────────────────────────
+installer/Releases/
+installer/packages/
+installer/*.exe
+installer/*.msi
+installer/*.deb
+installer/*.rpm
+installer/*.AppImage
+installer/*.dmg
+installer/*.pkg
+installer/*.zip
+installer/*.tar.gz
+*.Squirrel.exe
+RELEASES
+RELEASES-*
+
+# ─── Test Results ────────────────────────────────────────────
+TestResults/
+*.trx
+*.coverage
+*.coveragexml
+coverage*/
+.coverage/
+
+# ─── macOS ───────────────────────────────────────────────────
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.Spotlight-V100
+.Trashes
+
+# ─── Windows ─────────────────────────────────────────────────
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# ─── Linux ───────────────────────────────────────────────────
+*~
+.fuse_hidden*
+.directory
+.Trash-*
+
+# ─── Node (for any tooling scripts) ──────────────────────────
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# ─── Docker ──────────────────────────────────────────────────
+.dockerignore
+
+# ─── Secrets / Environment ───────────────────────────────────
+*.env
+*.env.local
+*.env.*.local
+appsettings.Development.json
+appsettings.Local.json
+secrets.json
+
+# ─── Misc ────────────────────────────────────────────────────
+*.bak
+*.tmp
+*.temp
+*.orig
+*.swp
+*.swo
+.sass-cache/
