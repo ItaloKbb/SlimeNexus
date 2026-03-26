@@ -16,6 +16,14 @@
   <ItemGroup>
     <!-- Hardware monitoring (AMD GPU support, RDNA 2/3) -->
     <PackageReference Include="LibreHardwareMonitorLib" Version="0.9.3" />
+    <!-- WMI for Windows hardware probing -->
+    <PackageReference Include="System.Management" Version="9.0.0" />
+    <!-- HTTP client for Ollama REST API -->
+    <PackageReference Include="Microsoft.Extensions.Http" Version="9.0.0" />
+    <!-- Logging abstractions -->
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="9.0.0" />
+    <!-- JSON serialization for API communication -->
+    <PackageReference Include="System.Text.Json" Version="9.0.0" />
   </ItemGroup>
 
 </Project>
