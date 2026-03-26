@@ -121,6 +121,7 @@ jobs:
           --packVersion "${{ needs.validate-tag.outputs.version }}"
           --packDir "publish/${{ matrix.rid }}"
           --outputDir "installer/releases/${{ matrix.rid }}"
+          --mainExe "SlimeNexus.UI.exe"
 
       - name: ⬆️ Upload release artifacts (${{ matrix.rid }})
         uses: actions/upload-artifact@v4
