@@ -1,0 +1,211 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:vm="using:SlimeNexus.UI.ViewModels.Installer"
+        xmlns:views="using:SlimeNexus.UI.Views.Installer"
+        mc:Ignorable="d"
+        x:Class="SlimeNexus.UI.Views.Installer.InstallerWindow"
+        x:DataType="vm:InstallerWizardViewModel"
+        Title="SlimeNexus - Instalação"
+        Width="900"
+        Height="650"
+        MinWidth="800"
+        MinHeight="600"
+        WindowStartupLocation="CenterScreen"
+        CanResize="False"
+        Background="#1a1a2e">
+
+    <Window.Styles>
+        <!-- Modern button style -->
+        <Style Selector="Button.primary">
+            <Setter Property="Background" Value="#6c5ce7"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="Padding" Value="24,12"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="FontSize" Value="14"/>
+        </Style>
+        <Style Selector="Button.primary:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="#7d6ee8"/>
+        </Style>
+        <Style Selector="Button.primary:disabled">
+            <Setter Property="Opacity" Value="0.5"/>
+        </Style>
+
+        <Style Selector="Button.secondary">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="#a0a0a0"/>
+            <Setter Property="Padding" Value="24,12"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="BorderBrush" Value="#404040"/>
+            <Setter Property="BorderThickness" Value="1"/>
+        </Style>
+        <Style Selector="Button.secondary:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="#2a2a4e"/>
+        </Style>
+
+        <!-- Progress bar style -->
+        <Style Selector="ProgressBar">
+            <Setter Property="Background" Value="#2a2a4e"/>
+            <Setter Property="Foreground" Value="#6c5ce7"/>
+            <Setter Property="Height" Value="8"/>
+            <Setter Property="CornerRadius" Value="4"/>
+        </Style>
+
+        <!-- Step indicator style -->
+        <Style Selector="Border.step-indicator">
+            <Setter Property="Width" Value="32"/>
+            <Setter Property="Height" Value="32"/>
+            <Setter Property="CornerRadius" Value="16"/>
+            <Setter Property="Background" Value="#2a2a4e"/>
+        </Style>
+        <Style Selector="Border.step-indicator.active">
+            <Setter Property="Background" Value="#6c5ce7"/>
+        </Style>
+        <Style Selector="Border.step-indicator.completed">
+            <Setter Property="Background" Value="#00b894"/>
+        </Style>
+    </Window.Styles>
+
+    <Grid RowDefinitions="Auto,*,Auto">
+        <!-- Header with step indicators -->
+        <Border Grid.Row="0" 
+                Background="#16162a" 
+                Padding="40,20"
+                CornerRadius="0,0,16,16">
+            <Grid RowDefinitions="Auto,20,Auto">
+                <!-- App title -->
+                <StackPanel Grid.Row="0" Orientation="Horizontal" HorizontalAlignment="Center" Spacing="12">
+                    <TextBlock Text="🐾" FontSize="32"/>
+                    <TextBlock Text="SlimeNexus" 
+                               FontSize="28" 
+                               FontWeight="Bold" 
+                               Foreground="White"
+                               VerticalAlignment="Center"/>
+                    <TextBlock Text="Instalador" 
+                               FontSize="16" 
+                               Foreground="#808080"
+                               VerticalAlignment="Center"
+                               Margin="8,0,0,0"/>
+                </StackPanel>
+
+                <!-- Step indicators -->
+                <ItemsControl Grid.Row="2" 
+                              ItemsSource="{Binding Steps}"
+                              HorizontalAlignment="Center">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <StackPanel Orientation="Horizontal" Spacing="8"/>
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="vm:InstallerStepViewModelBase">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <Border Classes="step-indicator"
+                                        Classes.active="{Binding $parent[ItemsControl].((vm:InstallerWizardViewModel)DataContext).CurrentStep, 
+                                                         Converter={x:Static ObjectConverters.IsNotNull}}"
+                                        ToolTip.Tip="{Binding Title}">
+                                    <TextBlock Text="{Binding Icon}" 
+                                               HorizontalAlignment="Center"
+                                               VerticalAlignment="Center"
+                                               FontSize="14"/>
+                                </Border>
+                                <Border Width="40" 
+                                        Height="2" 
+                                        Background="#2a2a4e"
+                                        VerticalAlignment="Center"
+                                        IsVisible="{Binding $self.DataContext, 
+                                                   Converter={x:Static ObjectConverters.IsNotNull}}"/>
+                            </StackPanel>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </Grid>
+        </Border>
+
+        <!-- Main content area -->
+        <Border Grid.Row="1" Margin="40,24" Padding="32" Background="#16162a" CornerRadius="16">
+            <ContentControl Content="{Binding CurrentStep}">
+                <ContentControl.DataTemplates>
+                    <!-- Welcome Step -->
+                    <DataTemplate DataType="vm:WelcomeStepViewModel">
+                        <views:WelcomeStepView/>
+                    </DataTemplate>
+                    
+                    <!-- System Requirements Step -->
+                    <DataTemplate DataType="vm:SystemRequirementsStepViewModel">
+                        <views:SystemRequirementsStepView/>
+                    </DataTemplate>
+                    
+                    <!-- Benchmark Step -->
+                    <DataTemplate DataType="vm:BenchmarkStepViewModel">
+                        <views:BenchmarkStepView/>
+                    </DataTemplate>
+                    
+                    <!-- Memory Analysis Step -->
+                    <DataTemplate DataType="vm:MemoryAnalysisStepViewModel">
+                        <views:MemoryAnalysisStepView/>
+                    </DataTemplate>
+                    
+                    <!-- Model Selection Step -->
+                    <DataTemplate DataType="vm:ModelSelectionStepViewModel">
+                        <views:ModelSelectionStepView/>
+                    </DataTemplate>
+                    
+                    <!-- Permissions Step -->
+                    <DataTemplate DataType="vm:PermissionsStepViewModel">
+                        <views:PermissionsStepView/>
+                    </DataTemplate>
+                    
+                    <!-- Installation Step -->
+                    <DataTemplate DataType="vm:InstallationStepViewModel">
+                        <views:InstallationStepView/>
+                    </DataTemplate>
+                    
+                    <!-- Completion Step -->
+                    <DataTemplate DataType="vm:CompletionStepViewModel">
+                        <views:CompletionStepView/>
+                    </DataTemplate>
+                </ContentControl.DataTemplates>
+            </ContentControl>
+        </Border>
+
+        <!-- Footer with navigation buttons -->
+        <Border Grid.Row="2" Background="#16162a" Padding="40,20">
+            <Grid ColumnDefinitions="*,Auto,Auto,Auto">
+                <!-- Cancel button (left) -->
+                <Button Grid.Column="0"
+                        Content="Cancelar"
+                        Classes="secondary"
+                        Command="{Binding CancelCommand}"
+                        IsVisible="{Binding !InstallationComplete}"
+                        HorizontalAlignment="Left"/>
+
+                <!-- Back button -->
+                <Button Grid.Column="1"
+                        Content="← Voltar"
+                        Classes="secondary"
+                        Command="{Binding GoBackCommand}"
+                        IsEnabled="{Binding CanGoBack}"
+                        IsVisible="{Binding CanGoBack}"
+                        Margin="0,0,12,0"/>
+
+                <!-- Next/Install/Finish button -->
+                <Button Grid.Column="2"
+                        Content="{Binding NextButtonText}"
+                        Classes="primary"
+                        Command="{Binding GoNextCommand}"
+                        IsEnabled="{Binding CanGoNext}"
+                        IsVisible="{Binding !InstallationComplete}"/>
+
+                <!-- Finish button (only on completion) -->
+                <Button Grid.Column="3"
+                        Content="🚀 Iniciar SlimeNexus"
+                        Classes="primary"
+                        Command="{Binding FinishCommand}"
+                        IsVisible="{Binding InstallationComplete}"/>
+            </Grid>
+        </Border>
+    </Grid>
+</Window>

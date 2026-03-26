@@ -1,0 +1,131 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:SlimeNexus.UI.ViewModels.Installer"
+             mc:Ignorable="d"
+             x:Class="SlimeNexus.UI.Views.Installer.ModelSelectionStepView"
+             x:DataType="vm:ModelSelectionStepViewModel">
+
+    <ScrollViewer>
+        <StackPanel Spacing="20" MaxWidth="700" HorizontalAlignment="Center">
+            <!-- Header -->
+            <StackPanel Spacing="8" HorizontalAlignment="Center">
+                <TextBlock Text="{Binding Icon}" FontSize="48" HorizontalAlignment="Center"/>
+                <TextBlock Text="{Binding Title}" 
+                           FontSize="24" 
+                           FontWeight="Bold" 
+                           Foreground="White"
+                           HorizontalAlignment="Center"/>
+                <TextBlock Text="{Binding Description}" 
+                           Foreground="#a0a0a0"
+                           HorizontalAlignment="Center"/>
+            </StackPanel>
+
+            <!-- Selection info -->
+            <Border Background="#2a2a4e" CornerRadius="8" Padding="16" HorizontalAlignment="Center">
+                <TextBlock Text="{Binding SelectionInfo}" 
+                           Foreground="#d0d0d0"
+                           HorizontalAlignment="Center"/>
+            </Border>
+
+            <!-- Model list -->
+            <ItemsControl ItemsSource="{Binding AvailableModels}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="vm:InstallerModelOption">
+                        <Border Background="#1a1a2e"
+                                CornerRadius="12" 
+                                Padding="20"
+                                Margin="0,4"
+                                Cursor="Hand"
+                                PointerPressed="OnModelCardPressed">
+                            <Grid ColumnDefinitions="Auto,*,Auto">
+                                <!-- Radio indicator -->
+                                <Border Grid.Column="0" 
+                                        Width="24" 
+                                        Height="24" 
+                                        CornerRadius="12"
+                                        BorderBrush="#6c5ce7"
+                                        BorderThickness="2"
+                                        VerticalAlignment="Center"
+                                        Margin="0,0,16,0">
+                                    <Border Width="12" 
+                                            Height="12" 
+                                            CornerRadius="6"
+                                            Background="#6c5ce7"
+                                            IsVisible="{Binding $parent[ItemsControl].((vm:ModelSelectionStepViewModel)DataContext).SelectedModel.ModelId, 
+                                                        Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+                                </Border>
+
+                                <!-- Model info -->
+                                <StackPanel Grid.Column="1" Spacing="4">
+                                    <StackPanel Orientation="Horizontal" Spacing="8">
+                                        <TextBlock Text="{Binding DisplayName}" 
+                                                   Foreground="White" 
+                                                   FontWeight="SemiBold"
+                                                   FontSize="15"/>
+                                        <Border Background="#00b894" 
+                                                CornerRadius="4" 
+                                                Padding="6,2"
+                                                IsVisible="{Binding IsRecommended}">
+                                            <TextBlock Text="Recomendado" Foreground="White" FontSize="10"/>
+                                        </Border>
+                                        <Border Background="#ff6b6b" 
+                                                CornerRadius="4" 
+                                                Padding="6,2"
+                                                IsVisible="{Binding !CanRun}">
+                                            <TextBlock Text="VRAM Insuficiente" Foreground="White" FontSize="10"/>
+                                        </Border>
+                                    </StackPanel>
+                                    <TextBlock Text="{Binding Description}" 
+                                               Foreground="#a0a0a0" 
+                                               FontSize="12"
+                                               TextWrapping="Wrap"/>
+                                    <StackPanel Orientation="Horizontal" Spacing="12" Margin="0,4,0,0">
+                                        <StackPanel Orientation="Horizontal" Spacing="4">
+                                            <TextBlock Text="💾" FontSize="12"/>
+                                            <TextBlock Text="{Binding SizeDisplay}" Foreground="#808080" FontSize="11"/>
+                                        </StackPanel>
+                                        <StackPanel Orientation="Horizontal" Spacing="4">
+                                            <TextBlock Text="🎮" FontSize="12"/>
+                                            <TextBlock Text="{Binding VramDisplay}" Foreground="#808080" FontSize="11"/>
+                                        </StackPanel>
+                                        <TextBlock Text="{Binding PerformanceNote}" 
+                                                   Foreground="#6c5ce7" 
+                                                   FontSize="11"/>
+                                    </StackPanel>
+                                </StackPanel>
+
+                                <!-- Model ID badge -->
+                                <Border Grid.Column="2" 
+                                        Background="#16162a" 
+                                        CornerRadius="6" 
+                                        Padding="8,4"
+                                        VerticalAlignment="Top">
+                                    <TextBlock Text="{Binding ModelId}" 
+                                               Foreground="#808080" 
+                                               FontSize="10"
+                                               FontFamily="Consolas"/>
+                                </Border>
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+
+            <!-- Info box -->
+            <Border Background="#1a2a3a" CornerRadius="8" Padding="16">
+                <StackPanel Spacing="8">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <TextBlock Text="💡" FontSize="16"/>
+                        <TextBlock Text="Dica" Foreground="#6c5ce7" FontWeight="SemiBold"/>
+                    </StackPanel>
+                    <TextBlock Text="Modelos maiores são mais inteligentes mas precisam de mais memória. Se você tem GPU dedicada com bastante VRAM, escolha modelos Q4 ou Q8. Para GPUs integradas ou pouca VRAM, modelos menores como Phi-3 ou Gemma são mais indicados."
+                               Foreground="#a0a0a0"
+                               TextWrapping="Wrap"
+                               FontSize="13"/>
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

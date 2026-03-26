@@ -1,0 +1,84 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:SlimeNexus.UI.ViewModels.Installer"
+             mc:Ignorable="d"
+             x:Class="SlimeNexus.UI.Views.Installer.WelcomeStepView"
+             x:DataType="vm:WelcomeStepViewModel">
+
+    <ScrollViewer>
+        <StackPanel Spacing="24" HorizontalAlignment="Center" MaxWidth="600">
+            <!-- Hero section -->
+            <StackPanel Spacing="16" HorizontalAlignment="Center">
+                <TextBlock Text="🐾" FontSize="72" HorizontalAlignment="Center"/>
+                <TextBlock Text="{Binding Title}" 
+                           FontSize="32" 
+                           FontWeight="Bold" 
+                           Foreground="White"
+                           HorizontalAlignment="Center"/>
+                <TextBlock Text="{Binding Description}" 
+                           FontSize="18" 
+                           Foreground="#a0a0a0"
+                           HorizontalAlignment="Center"/>
+                <Border Background="#2a2a4e" 
+                        CornerRadius="8" 
+                        Padding="16,8"
+                        HorizontalAlignment="Center">
+                    <TextBlock Text="{Binding AppVersion, StringFormat='Versão {0}'}" 
+                               Foreground="#6c5ce7"/>
+                </Border>
+            </StackPanel>
+
+            <!-- Features list -->
+            <Border Background="#1a1a2e" CornerRadius="12" Padding="24" Margin="0,16,0,0">
+                <StackPanel Spacing="16">
+                    <TextBlock Text="O que você terá:" 
+                               FontSize="16" 
+                               FontWeight="SemiBold" 
+                               Foreground="White"/>
+                    
+                    <ItemsControl ItemsSource="{Binding Features}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border Background="#16162a" 
+                                        CornerRadius="8" 
+                                        Padding="16,12"
+                                        Margin="0,4">
+                                    <TextBlock Text="{Binding}" 
+                                               Foreground="#d0d0d0"
+                                               TextWrapping="Wrap"/>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </Border>
+
+            <!-- Quick info -->
+            <Grid ColumnDefinitions="*,*,*" Margin="0,8,0,0">
+                <Border Grid.Column="0" Background="#1a1a2e" CornerRadius="8" Padding="16" Margin="0,0,8,0">
+                    <StackPanel HorizontalAlignment="Center" Spacing="4">
+                        <TextBlock Text="⚡" FontSize="24" HorizontalAlignment="Center"/>
+                        <TextBlock Text="~5 min" Foreground="White" HorizontalAlignment="Center"/>
+                        <TextBlock Text="Instalação" Foreground="#808080" FontSize="12" HorizontalAlignment="Center"/>
+                    </StackPanel>
+                </Border>
+                <Border Grid.Column="1" Background="#1a1a2e" CornerRadius="8" Padding="16" Margin="4,0">
+                    <StackPanel HorizontalAlignment="Center" Spacing="4">
+                        <TextBlock Text="💾" FontSize="24" HorizontalAlignment="Center"/>
+                        <TextBlock Text="~5 GB" Foreground="White" HorizontalAlignment="Center"/>
+                        <TextBlock Text="Espaço" Foreground="#808080" FontSize="12" HorizontalAlignment="Center"/>
+                    </StackPanel>
+                </Border>
+                <Border Grid.Column="2" Background="#1a1a2e" CornerRadius="8" Padding="16" Margin="8,0,0,0">
+                    <StackPanel HorizontalAlignment="Center" Spacing="4">
+                        <TextBlock Text="🔒" FontSize="24" HorizontalAlignment="Center"/>
+                        <TextBlock Text="100%" Foreground="White" HorizontalAlignment="Center"/>
+                        <TextBlock Text="Local" Foreground="#808080" FontSize="12" HorizontalAlignment="Center"/>
+                    </StackPanel>
+                </Border>
+            </Grid>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

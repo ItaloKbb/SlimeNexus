@@ -1,0 +1,132 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:SlimeNexus.UI.ViewModels.Installer"
+             mc:Ignorable="d"
+             x:Class="SlimeNexus.UI.Views.Installer.CompletionStepView"
+             x:DataType="vm:CompletionStepViewModel">
+
+    <ScrollViewer>
+        <StackPanel Spacing="24" MaxWidth="700" HorizontalAlignment="Center">
+            <!-- Hero section -->
+            <StackPanel Spacing="12" HorizontalAlignment="Center">
+                <TextBlock Text="🎉" FontSize="72" HorizontalAlignment="Center"/>
+                <TextBlock Text="{Binding Title}" 
+                           FontSize="28" 
+                           FontWeight="Bold" 
+                           Foreground="#00b894"
+                           HorizontalAlignment="Center"/>
+                <TextBlock Text="{Binding Description}" 
+                           FontSize="16"
+                           Foreground="#a0a0a0"
+                           HorizontalAlignment="Center"/>
+            </StackPanel>
+
+            <!-- Summary card -->
+            <Border Background="#1a1a2e" CornerRadius="16" Padding="24">
+                <StackPanel Spacing="16">
+                    <TextBlock Text="📋 Resumo da Instalação" 
+                               FontSize="16" 
+                               FontWeight="SemiBold" 
+                               Foreground="White"/>
+                    
+                    <Border Background="#0a0a1e" CornerRadius="8" Padding="16">
+                        <TextBlock Text="{Binding SummaryText}" 
+                                   Foreground="#d0d0d0"
+                                   LineHeight="24"
+                                   FontFamily="Consolas"/>
+                    </Border>
+
+                    <!-- Quick stats -->
+                    <Grid ColumnDefinitions="*,*,*">
+                        <Border Grid.Column="0" Background="#2a2a4e" CornerRadius="8" Padding="12" Margin="0,0,4,0">
+                            <StackPanel HorizontalAlignment="Center" Spacing="4">
+                                <TextBlock Text="🤖" FontSize="20" HorizontalAlignment="Center"/>
+                                <TextBlock Text="Modelo" Foreground="#808080" FontSize="10" HorizontalAlignment="Center"/>
+                                <TextBlock Text="{Binding SelectedModelDisplay}" 
+                                           Foreground="White" 
+                                           FontSize="11"
+                                           HorizontalAlignment="Center"
+                                           TextTrimming="CharacterEllipsis"
+                                           MaxWidth="100"/>
+                            </StackPanel>
+                        </Border>
+                        <Border Grid.Column="1" Background="#2a2a4e" CornerRadius="8" Padding="12" Margin="4,0">
+                            <StackPanel HorizontalAlignment="Center" Spacing="4">
+                                <TextBlock Text="⚡" FontSize="20" HorizontalAlignment="Center"/>
+                                <TextBlock Text="Performance" Foreground="#808080" FontSize="10" HorizontalAlignment="Center"/>
+                                <TextBlock Text="{Binding PerformanceTierDisplay}" 
+                                           Foreground="#6c5ce7" 
+                                           FontWeight="SemiBold"
+                                           HorizontalAlignment="Center"/>
+                            </StackPanel>
+                        </Border>
+                        <Border Grid.Column="2" Background="#2a2a4e" CornerRadius="8" Padding="12" Margin="4,0,0,0">
+                            <StackPanel HorizontalAlignment="Center" Spacing="4">
+                                <TextBlock Text="✅" FontSize="20" HorizontalAlignment="Center"/>
+                                <TextBlock Text="Status" Foreground="#808080" FontSize="10" HorizontalAlignment="Center"/>
+                                <TextBlock Text="Pronto!" 
+                                           Foreground="#00b894" 
+                                           FontWeight="SemiBold"
+                                           HorizontalAlignment="Center"/>
+                            </StackPanel>
+                        </Border>
+                    </Grid>
+                </StackPanel>
+            </Border>
+
+            <!-- Tips section -->
+            <Border Background="#1a1a2e" CornerRadius="16" Padding="24">
+                <StackPanel Spacing="12">
+                    <TextBlock Text="💡 Dicas Rápidas" 
+                               FontSize="16" 
+                               FontWeight="SemiBold" 
+                               Foreground="White"/>
+                    
+                    <ItemsControl ItemsSource="{Binding Tips}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border Background="#0a0a1e" CornerRadius="8" Padding="12" Margin="0,4">
+                                    <TextBlock Text="{Binding}" 
+                                               Foreground="#d0d0d0"
+                                               FontSize="13"/>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </Border>
+
+            <!-- Launch on close option -->
+            <Border Background="#1a2a3a" CornerRadius="12" Padding="20">
+                <Grid ColumnDefinitions="*,Auto">
+                    <StackPanel Grid.Column="0" Spacing="4">
+                        <TextBlock Text="🚀 Iniciar SlimeNexus agora" 
+                                   Foreground="White" 
+                                   FontWeight="SemiBold"/>
+                        <TextBlock Text="Abre o app automaticamente ao fechar o instalador" 
+                                   Foreground="#808080" 
+                                   FontSize="12"/>
+                    </StackPanel>
+                    <ToggleSwitch Grid.Column="1" 
+                                  IsChecked="{Binding LaunchOnClose}"
+                                  OnContent="Sim"
+                                  OffContent="Não"
+                                  VerticalAlignment="Center"/>
+                </Grid>
+            </Border>
+
+            <!-- Thank you message -->
+            <StackPanel HorizontalAlignment="Center" Spacing="8">
+                <TextBlock Text="Obrigado por instalar o SlimeNexus!" 
+                           Foreground="#a0a0a0"
+                           HorizontalAlignment="Center"/>
+                <TextBlock Text="🐾 Seu pet está te esperando!" 
+                           Foreground="#6c5ce7"
+                           FontSize="16"
+                           HorizontalAlignment="Center"/>
+            </StackPanel>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

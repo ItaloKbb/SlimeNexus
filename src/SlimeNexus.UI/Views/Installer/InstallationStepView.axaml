@@ -1,0 +1,181 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:SlimeNexus.UI.ViewModels.Installer"
+             mc:Ignorable="d"
+             x:Class="SlimeNexus.UI.Views.Installer.InstallationStepView"
+             x:DataType="vm:InstallationStepViewModel">
+
+    <ScrollViewer>
+        <StackPanel Spacing="20" MaxWidth="700" HorizontalAlignment="Center">
+            <!-- Header -->
+            <StackPanel Spacing="8" HorizontalAlignment="Center">
+                <TextBlock Text="{Binding Icon}" FontSize="48" HorizontalAlignment="Center"/>
+                <TextBlock Text="{Binding Title}" 
+                           FontSize="24" 
+                           FontWeight="Bold" 
+                           Foreground="White"
+                           HorizontalAlignment="Center"/>
+                <TextBlock Text="{Binding Description}" 
+                           Foreground="#a0a0a0"
+                           HorizontalAlignment="Center"/>
+            </StackPanel>
+
+            <!-- Pre-installation info (before starting) -->
+            <Border Background="#1a1a2e" 
+                    CornerRadius="12" 
+                    Padding="24"
+                    IsVisible="{Binding !InstallationStarted}">
+                <StackPanel Spacing="16" HorizontalAlignment="Center">
+                    <TextBlock Text="🚀" FontSize="48" HorizontalAlignment="Center"/>
+                    <TextBlock Text="Pronto para instalar!" 
+                               FontSize="18" 
+                               Foreground="White"
+                               FontWeight="SemiBold"
+                               HorizontalAlignment="Center"/>
+                    <TextBlock Text="Clique em 'Instalar' para começar o processo de configuração." 
+                               Foreground="#a0a0a0"
+                               HorizontalAlignment="Center"/>
+                </StackPanel>
+            </Border>
+
+            <!-- Overall Progress -->
+            <Border Background="#1a1a2e" 
+                    CornerRadius="12" 
+                    Padding="24"
+                    IsVisible="{Binding InstallationStarted}">
+                <StackPanel Spacing="12">
+                    <Grid ColumnDefinitions="*,Auto">
+                        <TextBlock Grid.Column="0" 
+                                   Text="Progresso da Instalação" 
+                                   Foreground="White" 
+                                   FontWeight="SemiBold"/>
+                        <TextBlock Grid.Column="1" 
+                                   Text="{Binding OverallProgress, StringFormat='{}{0}%'}" 
+                                   Foreground="#6c5ce7"/>
+                    </Grid>
+                    <ProgressBar Value="{Binding OverallProgress}" 
+                                 Maximum="100" 
+                                 Height="16"
+                                 CornerRadius="8"/>
+                    <TextBlock Text="{Binding CurrentTask}" 
+                               Foreground="#a0a0a0"
+                               HorizontalAlignment="Center"/>
+                </StackPanel>
+            </Border>
+
+            <!-- Task list -->
+            <ItemsControl ItemsSource="{Binding Tasks}" IsVisible="{Binding InstallationStarted}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="vm:InstallationTaskViewModel">
+                        <Border Background="#1a1a2e" 
+                                CornerRadius="12" 
+                                Padding="20"
+                                Margin="0,4">
+                            <Grid ColumnDefinitions="Auto,*,Auto">
+                                <!-- Status icon -->
+                                <Border Grid.Column="0" 
+                                        Width="40" 
+                                        Height="40" 
+                                        CornerRadius="20"
+                                        Background="#2a2a4e"
+                                        VerticalAlignment="Center"
+                                        Margin="0,0,16,0">
+                                    <TextBlock Text="{Binding StatusIcon}" 
+                                               FontSize="18" 
+                                               HorizontalAlignment="Center"
+                                               VerticalAlignment="Center"/>
+                                </Border>
+
+                                <!-- Task info -->
+                                <StackPanel Grid.Column="1" Spacing="4" VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding Name}" 
+                                               Foreground="White" 
+                                               FontWeight="SemiBold"/>
+                                    <TextBlock Text="{Binding Description}" 
+                                               Foreground="#808080" 
+                                               FontSize="12"/>
+                                    <ProgressBar Value="{Binding Progress}" 
+                                                 Maximum="100" 
+                                                 Height="4"
+                                                 CornerRadius="2"
+                                                 IsVisible="{Binding Status, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static vm:TaskStatus.Running}}"
+                                                 Margin="0,4,0,0"/>
+                                </StackPanel>
+
+                                <!-- Progress/Status badge -->
+                                <Border Grid.Column="2" 
+                                        CornerRadius="8" 
+                                        Padding="12,6"
+                                        VerticalAlignment="Center"
+                                        Background="{Binding Status, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static vm:TaskStatus.Completed}}"
+                                        IsVisible="{Binding Status, Converter={x:Static ObjectConverters.NotEqual}, ConverterParameter={x:Static vm:TaskStatus.Pending}}">
+                                    <TextBlock Text="{Binding Progress, StringFormat='{}{0}%'}" 
+                                               Foreground="White" 
+                                               FontSize="12"/>
+                                </Border>
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+
+            <!-- Error message -->
+            <Border Background="#3a1a1a" 
+                    CornerRadius="12" 
+                    Padding="20"
+                    IsVisible="{Binding InstallationFailed}">
+                <StackPanel Spacing="12">
+                    <StackPanel Orientation="Horizontal" Spacing="12">
+                        <TextBlock Text="❌" FontSize="24"/>
+                        <TextBlock Text="Erro na Instalação" 
+                                   Foreground="#ff6b6b" 
+                                   FontWeight="SemiBold"
+                                   FontSize="16"
+                                   VerticalAlignment="Center"/>
+                    </StackPanel>
+                    <TextBlock Text="{Binding ErrorMessage}" 
+                               Foreground="#f0a0a0"
+                               TextWrapping="Wrap"/>
+                    <Button Content="🔄 Tentar Novamente"
+                            Command="{Binding StartInstallationCommand}"
+                            HorizontalAlignment="Center"
+                            Padding="16,8"
+                            Background="#2a2a4e"
+                            Foreground="White"
+                            CornerRadius="8"/>
+                </StackPanel>
+            </Border>
+
+            <!-- Success message -->
+            <Border Background="#1a3a1a" 
+                    CornerRadius="12" 
+                    Padding="24"
+                    IsVisible="{Binding InstallationComplete}">
+                <StackPanel Spacing="12" HorizontalAlignment="Center">
+                    <TextBlock Text="🎉" FontSize="48" HorizontalAlignment="Center"/>
+                    <TextBlock Text="Instalação Concluída!" 
+                               FontSize="20" 
+                               FontWeight="Bold"
+                               Foreground="#a0f0a0"
+                               HorizontalAlignment="Center"/>
+                    <TextBlock Text="Clique em 'Próximo' para finalizar." 
+                               Foreground="#80c080"
+                               HorizontalAlignment="Center"/>
+                </StackPanel>
+            </Border>
+
+            <!-- Cancel button during installation -->
+            <Button Content="❌ Cancelar Instalação"
+                    Command="{Binding CancelInstallationCommand}"
+                    HorizontalAlignment="Center"
+                    IsVisible="{Binding InstallationStarted}"
+                    IsEnabled="{Binding !InstallationComplete}"
+                    Padding="16,8"
+                    Background="#3a2a2a"
+                    Foreground="#f0a0a0"
+                    CornerRadius="8"/>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

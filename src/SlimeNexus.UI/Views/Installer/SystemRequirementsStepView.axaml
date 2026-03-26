@@ -1,0 +1,138 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:SlimeNexus.UI.ViewModels.Installer"
+             xmlns:conv="using:SlimeNexus.UI.Converters"
+             mc:Ignorable="d"
+             x:Class="SlimeNexus.UI.Views.Installer.SystemRequirementsStepView"
+             x:DataType="vm:SystemRequirementsStepViewModel">
+
+    <UserControl.Resources>
+        <conv:BoolToStringConverter x:Key="BoolToString"/>
+        <conv:StringToColorBrushConverter x:Key="StringToColorBrush"/>
+    </UserControl.Resources>
+
+    <ScrollViewer>
+        <StackPanel Spacing="20" MaxWidth="700" HorizontalAlignment="Center">
+            <!-- Header -->
+            <StackPanel Spacing="8" HorizontalAlignment="Center">
+                <TextBlock Text="{Binding Icon}" FontSize="48" HorizontalAlignment="Center"/>
+                <TextBlock Text="{Binding Title}" 
+                           FontSize="24" 
+                           FontWeight="Bold" 
+                           Foreground="White"
+                           HorizontalAlignment="Center"/>
+                <TextBlock Text="{Binding Description}" 
+                           Foreground="#a0a0a0"
+                           HorizontalAlignment="Center"/>
+            </StackPanel>
+
+            <!-- Loading indicator -->
+            <Border Background="#1a1a2e" 
+                    CornerRadius="12" 
+                    Padding="24"
+                    IsVisible="{Binding IsChecking}">
+                <StackPanel Spacing="16" HorizontalAlignment="Center">
+                    <ProgressBar IsIndeterminate="True" Width="200"/>
+                    <TextBlock Text="{Binding StatusMessage}" 
+                               Foreground="#a0a0a0"
+                               HorizontalAlignment="Center"/>
+                </StackPanel>
+            </Border>
+
+            <!-- Results -->
+            <StackPanel Spacing="16" IsVisible="{Binding CheckComplete}">
+                <!-- CPU -->
+                <Border Background="#1a1a2e" CornerRadius="12" Padding="20">
+                    <Grid ColumnDefinitions="Auto,*,Auto">
+                        <TextBlock Grid.Column="0" Text="🖥️" FontSize="24" VerticalAlignment="Center"/>
+                        <StackPanel Grid.Column="1" Margin="16,0" VerticalAlignment="Center">
+                            <TextBlock Text="Processador (CPU)" Foreground="#808080" FontSize="12"/>
+                            <TextBlock Text="{Binding CpuName}" Foreground="White" FontWeight="SemiBold"/>
+                            <TextBlock Text="{Binding CpuCores, StringFormat='{}{0} núcleos'}" Foreground="#a0a0a0" FontSize="12"/>
+                        </StackPanel>
+                        <TextBlock Grid.Column="2" Text="✅" FontSize="20" VerticalAlignment="Center"/>
+                    </Grid>
+                </Border>
+
+                <!-- RAM -->
+                <Border Background="#1a1a2e" CornerRadius="12" Padding="20">
+                    <Grid ColumnDefinitions="Auto,*,Auto">
+                        <TextBlock Grid.Column="0" Text="💾" FontSize="24" VerticalAlignment="Center"/>
+                        <StackPanel Grid.Column="1" Margin="16,0" VerticalAlignment="Center">
+                            <TextBlock Text="Memória RAM" Foreground="#808080" FontSize="12"/>
+                            <TextBlock Text="{Binding RamInfo}" Foreground="White" FontWeight="SemiBold"/>
+                            <TextBlock Text="{Binding MinRamDescription}" Foreground="#a0a0a0" FontSize="12"/>
+                        </StackPanel>
+                        <TextBlock Grid.Column="2" 
+                                   Text="{Binding MeetsRamRequirement, Converter={StaticResource BoolToString}, ConverterParameter='✅|❌'}" 
+                                   FontSize="20" 
+                                   VerticalAlignment="Center"/>
+                    </Grid>
+                </Border>
+
+                <!-- GPU / VRAM -->
+                <Border Background="#1a1a2e" CornerRadius="12" Padding="20">
+                    <Grid ColumnDefinitions="Auto,*,Auto">
+                        <TextBlock Grid.Column="0" Text="🎮" FontSize="24" VerticalAlignment="Center"/>
+                        <StackPanel Grid.Column="1" Margin="16,0" VerticalAlignment="Center">
+                            <TextBlock Text="Placa de Vídeo (GPU)" Foreground="#808080" FontSize="12"/>
+                            <TextBlock Text="{Binding GpuName}" Foreground="White" FontWeight="SemiBold"/>
+                            <TextBlock Text="{Binding VramInfo}" Foreground="#a0a0a0" FontSize="12"/>
+                            <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,4,0,0">
+                                <Border Background="#2a2a4e" CornerRadius="4" Padding="8,4" 
+                                        IsVisible="{Binding SupportsCuda}">
+                                    <TextBlock Text="CUDA ✓" Foreground="#00b894" FontSize="11"/>
+                                </Border>
+                            </StackPanel>
+                        </StackPanel>
+                        <TextBlock Grid.Column="2" 
+                                   Text="{Binding MeetsVramRequirement, Converter={StaticResource BoolToString}, ConverterParameter='✅|⚠️'}" 
+                                   FontSize="20" 
+                                   VerticalAlignment="Center"/>
+                    </Grid>
+                </Border>
+
+                <!-- Disk -->
+                <Border Background="#1a1a2e" CornerRadius="12" Padding="20">
+                    <Grid ColumnDefinitions="Auto,*,Auto">
+                        <TextBlock Grid.Column="0" Text="💿" FontSize="24" VerticalAlignment="Center"/>
+                        <StackPanel Grid.Column="1" Margin="16,0" VerticalAlignment="Center">
+                            <TextBlock Text="Espaço em Disco" Foreground="#808080" FontSize="12"/>
+                            <TextBlock Text="{Binding DiskInfo}" Foreground="White" FontWeight="SemiBold"/>
+                            <TextBlock Text="{Binding MinDiskDescription}" Foreground="#a0a0a0" FontSize="12"/>
+                        </StackPanel>
+                        <TextBlock Grid.Column="2" 
+                                   Text="{Binding MeetsDiskRequirement, Converter={StaticResource BoolToString}, ConverterParameter='✅|❌'}" 
+                                   FontSize="20" 
+                                   VerticalAlignment="Center"/>
+                    </Grid>
+                </Border>
+
+                <!-- Overall Status -->
+                <Border CornerRadius="12" 
+                        Padding="20"
+                        Background="#1a1a2e">
+                    <StackPanel HorizontalAlignment="Center" Spacing="8">
+                        <TextBlock Text="{Binding OverallStatus}" 
+                                   FontSize="16" 
+                                   FontWeight="SemiBold"
+                                   HorizontalAlignment="Center"
+                                   Foreground="{Binding OverallStatusColor, Converter={StaticResource StringToColorBrush}}"/>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+
+            <!-- Retry button -->
+            <Button Content="🔄 Verificar Novamente"
+                    Command="{Binding CheckRequirementsCommand}"
+                    HorizontalAlignment="Center"
+                    IsVisible="{Binding !IsChecking}"
+                    Padding="16,8"
+                    Background="#2a2a4e"
+                    Foreground="White"
+                    CornerRadius="8"/>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

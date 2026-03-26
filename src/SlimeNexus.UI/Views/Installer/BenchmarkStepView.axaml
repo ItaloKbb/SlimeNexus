@@ -1,0 +1,189 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:SlimeNexus.UI.ViewModels.Installer"
+             mc:Ignorable="d"
+             x:Class="SlimeNexus.UI.Views.Installer.BenchmarkStepView"
+             x:DataType="vm:BenchmarkStepViewModel">
+
+    <ScrollViewer>
+        <StackPanel Spacing="20" MaxWidth="700" HorizontalAlignment="Center">
+            <!-- Header -->
+            <StackPanel Spacing="8" HorizontalAlignment="Center">
+                <TextBlock Text="{Binding Icon}" FontSize="48" HorizontalAlignment="Center"/>
+                <TextBlock Text="{Binding Title}" 
+                           FontSize="24" 
+                           FontWeight="Bold" 
+                           Foreground="White"
+                           HorizontalAlignment="Center"/>
+                <TextBlock Text="{Binding Description}" 
+                           Foreground="#a0a0a0"
+                           HorizontalAlignment="Center"/>
+            </StackPanel>
+
+            <!-- Overall Progress -->
+            <Border Background="#1a1a2e" CornerRadius="12" Padding="24">
+                <StackPanel Spacing="12">
+                    <Grid ColumnDefinitions="*,Auto">
+                        <TextBlock Grid.Column="0" 
+                                   Text="Progresso Geral" 
+                                   Foreground="White" 
+                                   FontWeight="SemiBold"/>
+                        <TextBlock Grid.Column="1" 
+                                   Text="{Binding OverallProgress, StringFormat='{}{0}%'}" 
+                                   Foreground="#6c5ce7"/>
+                    </Grid>
+                    <ProgressBar Value="{Binding OverallProgress}" 
+                                 Maximum="100" 
+                                 Height="12"
+                                 CornerRadius="6"/>
+                </StackPanel>
+            </Border>
+
+            <!-- Individual benchmarks -->
+            <Grid ColumnDefinitions="*,*" RowDefinitions="*,*" Margin="0,8">
+                <!-- CPU -->
+                <Border Grid.Row="0" Grid.Column="0" 
+                        Background="#1a1a2e" 
+                        CornerRadius="12" 
+                        Padding="20"
+                        Margin="0,0,8,8">
+                    <StackPanel Spacing="12">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <TextBlock Text="🖥️" FontSize="20"/>
+                            <TextBlock Text="CPU" Foreground="White" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                        </StackPanel>
+                        <ProgressBar Value="{Binding CpuProgress}" Maximum="100" Height="8"/>
+                        <Grid ColumnDefinitions="*,Auto">
+                            <TextBlock Grid.Column="0" Text="{Binding CpuStatus}" Foreground="#a0a0a0" FontSize="12"/>
+                            <TextBlock Grid.Column="1" 
+                                       Text="{Binding CpuScore, StringFormat='{}{0:F0}'}" 
+                                       Foreground="#6c5ce7" 
+                                       FontWeight="Bold"
+                                       IsVisible="{Binding BenchmarkComplete}"/>
+                        </Grid>
+                    </StackPanel>
+                </Border>
+
+                <!-- Memory -->
+                <Border Grid.Row="0" Grid.Column="1" 
+                        Background="#1a1a2e" 
+                        CornerRadius="12" 
+                        Padding="20"
+                        Margin="8,0,0,8">
+                    <StackPanel Spacing="12">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <TextBlock Text="💾" FontSize="20"/>
+                            <TextBlock Text="Memória" Foreground="White" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                        </StackPanel>
+                        <ProgressBar Value="{Binding MemoryProgress}" Maximum="100" Height="8"/>
+                        <Grid ColumnDefinitions="*,Auto">
+                            <TextBlock Grid.Column="0" Text="{Binding MemoryStatus}" Foreground="#a0a0a0" FontSize="12"/>
+                            <TextBlock Grid.Column="1" 
+                                       Text="{Binding MemoryScore, StringFormat='{}{0:F0}'}" 
+                                       Foreground="#6c5ce7" 
+                                       FontWeight="Bold"
+                                       IsVisible="{Binding BenchmarkComplete}"/>
+                        </Grid>
+                    </StackPanel>
+                </Border>
+
+                <!-- Disk -->
+                <Border Grid.Row="1" Grid.Column="0" 
+                        Background="#1a1a2e" 
+                        CornerRadius="12" 
+                        Padding="20"
+                        Margin="0,8,8,0">
+                    <StackPanel Spacing="12">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <TextBlock Text="💿" FontSize="20"/>
+                            <TextBlock Text="Disco" Foreground="White" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                        </StackPanel>
+                        <ProgressBar Value="{Binding DiskProgress}" Maximum="100" Height="8"/>
+                        <Grid ColumnDefinitions="*,Auto">
+                            <TextBlock Grid.Column="0" Text="{Binding DiskStatus}" Foreground="#a0a0a0" FontSize="12"/>
+                            <TextBlock Grid.Column="1" 
+                                       Text="{Binding DiskScore, StringFormat='{}{0:F0}'}" 
+                                       Foreground="#6c5ce7" 
+                                       FontWeight="Bold"
+                                       IsVisible="{Binding BenchmarkComplete}"/>
+                        </Grid>
+                    </StackPanel>
+                </Border>
+
+                <!-- AI Inference -->
+                <Border Grid.Row="1" Grid.Column="1" 
+                        Background="#1a1a2e" 
+                        CornerRadius="12" 
+                        Padding="20"
+                        Margin="8,8,0,0">
+                    <StackPanel Spacing="12">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <TextBlock Text="🤖" FontSize="20"/>
+                            <TextBlock Text="IA" Foreground="White" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                        </StackPanel>
+                        <ProgressBar Value="{Binding AiProgress}" Maximum="100" Height="8"/>
+                        <Grid ColumnDefinitions="*,Auto">
+                            <TextBlock Grid.Column="0" Text="{Binding AiStatus}" Foreground="#a0a0a0" FontSize="12"/>
+                            <TextBlock Grid.Column="1" 
+                                       Text="{Binding AiScore, StringFormat='{}{0:F0}'}" 
+                                       Foreground="#6c5ce7" 
+                                       FontWeight="Bold"
+                                       IsVisible="{Binding BenchmarkComplete}"/>
+                        </Grid>
+                    </StackPanel>
+                </Border>
+            </Grid>
+
+            <!-- Results Summary -->
+            <Border Background="#1a1a2e" 
+                    CornerRadius="12" 
+                    Padding="24"
+                    IsVisible="{Binding BenchmarkComplete}">
+                <StackPanel Spacing="16">
+                    <Grid ColumnDefinitions="*,Auto">
+                        <StackPanel Grid.Column="0">
+                            <TextBlock Text="Score Geral" Foreground="#808080" FontSize="12"/>
+                            <TextBlock Text="{Binding OverallScore, StringFormat='{}{0:F0} / 100'}" 
+                                       Foreground="White" 
+                                       FontSize="28" 
+                                       FontWeight="Bold"/>
+                        </StackPanel>
+                        <Border Grid.Column="1" 
+                                CornerRadius="8" 
+                                Padding="16,8"
+                                VerticalAlignment="Center"
+                                Background="#2a2a4e">
+                            <TextBlock Text="{Binding PerformanceTier}" 
+                                       FontSize="18" 
+                                       FontWeight="Bold"
+                                       Foreground="{Binding PerformanceTierColor}"/>
+                        </Border>
+                    </Grid>
+                    
+                    <Border Background="#2a2a4e" CornerRadius="8" Padding="16">
+                        <TextBlock Text="{Binding PerformanceDescription}" 
+                                   Foreground="#d0d0d0"
+                                   TextWrapping="Wrap"/>
+                    </Border>
+
+                    <TextBlock Text="{Binding TotalDurationMs, StringFormat='Tempo total: {0}ms'}" 
+                               Foreground="#808080" 
+                               FontSize="12"
+                               HorizontalAlignment="Center"/>
+                </StackPanel>
+            </Border>
+
+            <!-- Retry button -->
+            <Button Content="🔄 Executar Novamente"
+                    Command="{Binding RunBenchmarkCommand}"
+                    HorizontalAlignment="Center"
+                    IsVisible="{Binding BenchmarkComplete}"
+                    Padding="16,8"
+                    Background="#2a2a4e"
+                    Foreground="White"
+                    CornerRadius="8"/>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

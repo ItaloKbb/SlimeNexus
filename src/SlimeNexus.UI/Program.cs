@@ -16,7 +16,7 @@ VelopackApp.Build()
     .WithFirstRun((v) => 
     {
         // First run after install - create desktop shortcut, etc.
-        Console.WriteLine($"SlimeNexus v{v} installed successfully!");
+        System.Diagnostics.Debug.WriteLine($"SlimeNexus v{v} installed successfully!");
     })
     .Run();
 
@@ -27,7 +27,7 @@ using var mutex = new Mutex(true, mutexName, out var createdNew);
 if (!createdNew)
 {
     // Another instance is already running
-    Console.WriteLine("SlimeNexus is already running.");
+    System.Diagnostics.Debug.WriteLine("SlimeNexus is already running.");
     return 1;
 }
 
@@ -56,7 +56,7 @@ try
 }
 catch (Exception ex)
 {
-    Console.Error.WriteLine($"Fatal error: {ex}");
+    System.Diagnostics.Debug.WriteLine($"Fatal error: {ex}");
     return 1;
 }
 
@@ -81,9 +81,12 @@ static IHostBuilder CreateHostBuilder(string[] args) =>
         .ConfigureLogging(logging =>
         {
             logging.ClearProviders();
-            logging.AddConsole();
             logging.AddDebug();
+#if DEBUG
             logging.SetMinimumLevel(LogLevel.Debug);
+#else
+            logging.SetMinimumLevel(LogLevel.Information);
+#endif
         })
         .ConfigureServices((context, services) =>
         {

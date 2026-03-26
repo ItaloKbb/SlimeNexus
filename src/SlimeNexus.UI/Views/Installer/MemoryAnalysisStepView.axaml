@@ -1,0 +1,171 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:SlimeNexus.UI.ViewModels.Installer"
+             mc:Ignorable="d"
+             x:Class="SlimeNexus.UI.Views.Installer.MemoryAnalysisStepView"
+             x:DataType="vm:MemoryAnalysisStepViewModel">
+
+    <ScrollViewer>
+        <StackPanel Spacing="20" MaxWidth="700" HorizontalAlignment="Center">
+            <!-- Header -->
+            <StackPanel Spacing="8" HorizontalAlignment="Center">
+                <TextBlock Text="{Binding Icon}" FontSize="48" HorizontalAlignment="Center"/>
+                <TextBlock Text="{Binding Title}" 
+                           FontSize="24" 
+                           FontWeight="Bold" 
+                           Foreground="White"
+                           HorizontalAlignment="Center"/>
+                <TextBlock Text="{Binding Description}" 
+                           Foreground="#a0a0a0"
+                           HorizontalAlignment="Center"/>
+            </StackPanel>
+
+            <!-- RAM Analysis -->
+            <Border Background="#1a1a2e" CornerRadius="12" Padding="24">
+                <StackPanel Spacing="16">
+                    <StackPanel Orientation="Horizontal" Spacing="12">
+                        <TextBlock Text="💾" FontSize="28"/>
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Text="Memória RAM" Foreground="White" FontWeight="SemiBold" FontSize="16"/>
+                            <TextBlock Text="{Binding RamStatus}" Foreground="{Binding RamStatusColor}" FontSize="12"/>
+                        </StackPanel>
+                    </StackPanel>
+
+                    <!-- RAM Bar - simplified without converters -->
+                    <Grid Height="32">
+                        <Border Background="#2a2a4e" CornerRadius="8"/>
+                        <ProgressBar Value="{Binding RamUsagePercent}" 
+                                     Maximum="100" 
+                                     Height="32"
+                                     Foreground="#6c5ce7"
+                                     Background="Transparent"/>
+                    </Grid>
+
+                    <Grid ColumnDefinitions="*,*,*">
+                        <StackPanel Grid.Column="0">
+                            <TextBlock Text="Total" Foreground="#808080" FontSize="11"/>
+                            <TextBlock Text="{Binding TotalRamGb, StringFormat='{}{0:F1} GB'}" 
+                                       Foreground="White" FontWeight="SemiBold"/>
+                        </StackPanel>
+                        <StackPanel Grid.Column="1" HorizontalAlignment="Center">
+                            <TextBlock Text="Em Uso" Foreground="#808080" FontSize="11"/>
+                            <TextBlock Text="{Binding UsedRamGb, StringFormat='{}{0:F1} GB'}" 
+                                       Foreground="#ff6b6b" FontWeight="SemiBold"/>
+                        </StackPanel>
+                        <StackPanel Grid.Column="2" HorizontalAlignment="Right">
+                            <TextBlock Text="Disponível" Foreground="#808080" FontSize="11"/>
+                            <TextBlock Text="{Binding AvailableRamGb, StringFormat='{}{0:F1} GB'}" 
+                                       Foreground="#00b894" FontWeight="SemiBold"/>
+                        </StackPanel>
+                    </Grid>
+
+                    <Border Background="#2a2a4e" CornerRadius="8" Padding="12">
+                        <TextBlock Text="{Binding RamRecommendation}" 
+                                   Foreground="#d0d0d0" 
+                                   TextWrapping="Wrap"
+                                   FontSize="13"/>
+                    </Border>
+                </StackPanel>
+            </Border>
+
+            <!-- VRAM Analysis -->
+            <Border Background="#1a1a2e" CornerRadius="12" Padding="24">
+                <StackPanel Spacing="16">
+                    <StackPanel Orientation="Horizontal" Spacing="12">
+                        <TextBlock Text="🎮" FontSize="28"/>
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Text="Memória de Vídeo (VRAM)" Foreground="White" FontWeight="SemiBold" FontSize="16"/>
+                            <TextBlock Text="{Binding VramStatus}" Foreground="{Binding VramStatusColor}" FontSize="12"/>
+                        </StackPanel>
+                    </StackPanel>
+
+                    <!-- VRAM Bar (only if discrete GPU) - simplified -->
+                    <Border Background="#2a2a4e" CornerRadius="8" Height="32" IsVisible="{Binding HasDiscreteGpu}">
+                        <Border Background="#00b894" 
+                                CornerRadius="8"
+                                HorizontalAlignment="Left">
+                            <TextBlock Text="{Binding TotalVramGb, StringFormat='{}{0:F1} GB'}" 
+                                       Foreground="White"
+                                       VerticalAlignment="Center"
+                                       Margin="12,0"/>
+                        </Border>
+                    </Border>
+
+                    <!-- No discrete GPU message -->
+                    <Border Background="#2a2a4e" 
+                            CornerRadius="8" 
+                            Padding="16"
+                            IsVisible="{Binding !HasDiscreteGpu}">
+                        <StackPanel Spacing="8" HorizontalAlignment="Center">
+                            <TextBlock Text="🖥️" FontSize="24" HorizontalAlignment="Center"/>
+                            <TextBlock Text="GPU Integrada Detectada" 
+                                       Foreground="White" 
+                                       HorizontalAlignment="Center"/>
+                            <TextBlock Text="A IA utilizará CPU e RAM para processamento" 
+                                       Foreground="#a0a0a0" 
+                                       FontSize="12"
+                                       HorizontalAlignment="Center"/>
+                        </StackPanel>
+                    </Border>
+
+                    <Grid ColumnDefinitions="*,*" IsVisible="{Binding HasDiscreteGpu}">
+                        <StackPanel Grid.Column="0">
+                            <TextBlock Text="Total" Foreground="#808080" FontSize="11"/>
+                            <TextBlock Text="{Binding TotalVramGb, StringFormat='{}{0:F1} GB'}" 
+                                       Foreground="White" FontWeight="SemiBold"/>
+                        </StackPanel>
+                        <StackPanel Grid.Column="1" HorizontalAlignment="Right">
+                            <TextBlock Text="Disponível" Foreground="#808080" FontSize="11"/>
+                            <TextBlock Text="{Binding AvailableVramGb, StringFormat='{}{0:F1} GB'}" 
+                                       Foreground="#00b894" FontWeight="SemiBold"/>
+                        </StackPanel>
+                    </Grid>
+
+                    <!-- CUDA badge -->
+                    <StackPanel Orientation="Horizontal" Spacing="8" IsVisible="{Binding SupportsCuda}">
+                        <Border Background="#00b894" CornerRadius="4" Padding="8,4">
+                            <TextBlock Text="✓ CUDA Suportado" Foreground="White" FontSize="11"/>
+                        </Border>
+                        <Border Background="#6c5ce7" CornerRadius="4" Padding="8,4">
+                            <TextBlock Text="✓ Aceleração GPU" Foreground="White" FontSize="11"/>
+                        </Border>
+                    </StackPanel>
+
+                    <Border Background="#2a2a4e" CornerRadius="8" Padding="12">
+                        <TextBlock Text="{Binding VramRecommendation}" 
+                                   Foreground="#d0d0d0" 
+                                   TextWrapping="Wrap"
+                                   FontSize="13"/>
+                    </Border>
+                </StackPanel>
+            </Border>
+
+            <!-- AI Capability Summary -->
+            <Border Background="#1a1a2e" CornerRadius="12" Padding="20">
+                <StackPanel Spacing="12">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <TextBlock Text="🤖" FontSize="20"/>
+                        <TextBlock Text="Capacidade de IA Local" Foreground="White" FontWeight="SemiBold"/>
+                    </StackPanel>
+
+                    <Border Background="#1a3a2a" 
+                            CornerRadius="8" 
+                            Padding="16">
+                        <TextBlock Text="{Binding OverallMemoryStatus}" 
+                                   Foreground="White" 
+                                   TextWrapping="Wrap"/>
+                    </Border>
+
+                    <StackPanel Orientation="Horizontal" Spacing="8" IsVisible="{Binding SuggestedQuantization, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+                        <TextBlock Text="Quantização recomendada:" Foreground="#808080" FontSize="12"/>
+                        <Border Background="#6c5ce7" CornerRadius="4" Padding="6,2">
+                            <TextBlock Text="{Binding SuggestedQuantization}" Foreground="White" FontSize="11"/>
+                        </Border>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>
