@@ -125,3 +125,4 @@ secrets.json
 *.swp
 *.swo
 .sass-cache/
+/.github/workflows/ci-cd.yml

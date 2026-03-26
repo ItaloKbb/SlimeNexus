@@ -1,0 +1,12 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:views="using:SlimeNexus.UI.Views"
+        x:Class="SlimeNexus.UI.Views.HardwareDashboardWindow"
+        Title="🖥️ Hardware Dashboard"
+        Width="600" Height="700"
+        WindowStartupLocation="CenterScreen"
+        Background="#121212">
+    
+    <views:HardwareDashboardView />
+    
+</Window>

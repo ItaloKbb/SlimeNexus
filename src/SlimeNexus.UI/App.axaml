@@ -1,0 +1,30 @@
+<Application xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:converters="using:SlimeNexus.UI.Converters"
+             x:Class="SlimeNexus.UI.App"
+             RequestedThemeVariant="Dark">
+
+    <Application.Styles>
+        <FluentTheme />
+    </Application.Styles>
+
+    <Application.Resources>
+        <ResourceDictionary>
+            <!-- Converters -->
+            <converters:BoolToGreenRedConverter x:Key="BoolToGreenRedConverter" />
+
+            <!-- Brand Colors -->
+            <Color x:Key="SlimePrimaryColor">#4CAF50</Color>
+            <Color x:Key="SlimeSecondaryColor">#81C784</Color>
+            <Color x:Key="SlimeAccentColor">#69F0AE</Color>
+            <Color x:Key="SlimeDangerColor">#EF5350</Color>
+            <Color x:Key="SlimeWarningColor">#FFA726</Color>
+
+            <!-- Brushes -->
+            <SolidColorBrush x:Key="SlimePrimaryBrush" Color="{StaticResource SlimePrimaryColor}" />
+            <SolidColorBrush x:Key="SlimeSecondaryBrush" Color="{StaticResource SlimeSecondaryColor}" />
+            <SolidColorBrush x:Key="SlimeAccentBrush" Color="{StaticResource SlimeAccentColor}" />
+        </ResourceDictionary>
+    </Application.Resources>
+
+</Application>

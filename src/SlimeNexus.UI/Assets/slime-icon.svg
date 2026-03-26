@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs>
+    <linearGradient id="slimeGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#69F0AE"/>
+      <stop offset="100%" style="stop-color:#4CAF50"/>
+    </linearGradient>
+  </defs>
+  <!-- Slime body -->
+  <ellipse cx="32" cy="38" rx="24" ry="20" fill="url(#slimeGrad)"/>
+  <!-- Slime highlight -->
+  <ellipse cx="26" cy="32" rx="8" ry="6" fill="#A5D6A7" opacity="0.6"/>
+  <!-- Eyes -->
+  <circle cx="24" cy="36" r="4" fill="white"/>
+  <circle cx="40" cy="36" r="4" fill="white"/>
+  <circle cx="25" cy="36" r="2" fill="#333"/>
+  <circle cx="41" cy="36" r="2" fill="#333"/>
+  <!-- Smile -->
+  <path d="M26 44 Q32 50 38 44" stroke="#2E7D32" stroke-width="2" fill="none" stroke-linecap="round"/>
+</svg>

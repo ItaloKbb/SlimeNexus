@@ -1,0 +1,131 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:SlimeNexus.UI.ViewModels"
+        x:Class="SlimeNexus.UI.Views.PetStatusView"
+        x:DataType="vm:PetStatusViewModel"
+        Title="🐾 Pet Status"
+        Width="400" Height="500"
+        WindowStartupLocation="CenterScreen"
+        Background="#121212"
+        CanResize="False">
+    
+    <Grid Margin="20" RowDefinitions="Auto,*,Auto">
+        
+        <!-- Pet Avatar -->
+        <Border Grid.Row="0" 
+                HorizontalAlignment="Center"
+                Width="150" Height="150"
+                CornerRadius="75"
+                Background="{StaticResource SlimePrimaryBrush}"
+                Margin="0,0,0,20">
+            <TextBlock Text="🐾" 
+                       FontSize="60"
+                       HorizontalAlignment="Center"
+                       VerticalAlignment="Center" />
+        </Border>
+        
+        <!-- Stats -->
+        <StackPanel Grid.Row="1" Spacing="16">
+            
+            <!-- Pet Name & State -->
+            <StackPanel HorizontalAlignment="Center" Spacing="4">
+                <TextBlock Text="{Binding PetName}" 
+                           FontSize="24" 
+                           FontWeight="Bold"
+                           HorizontalAlignment="Center" />
+                <TextBlock Text="{Binding PetStateEmoji}" 
+                           FontSize="32"
+                           HorizontalAlignment="Center" />
+                <TextBlock Text="{Binding PetState}" 
+                           FontSize="14"
+                           Opacity="0.7"
+                           HorizontalAlignment="Center" />
+            </StackPanel>
+            
+            <!-- XP Bar -->
+            <Border Background="#1E1E1E" CornerRadius="12" Padding="16">
+                <StackPanel Spacing="8">
+                    <StackPanel Orientation="Horizontal" Spacing="10">
+                        <TextBlock Text="⭐" FontSize="16" />
+                        <TextBlock Text="Experience" FontWeight="SemiBold" />
+                        <TextBlock Text="{Binding XpText}" 
+                                   Opacity="0.7"
+                                   HorizontalAlignment="Right" />
+                    </StackPanel>
+                    <ProgressBar Value="{Binding XpProgress}" 
+                                 Maximum="100"
+                                 Height="12"
+                                 CornerRadius="6"
+                                 Foreground="{StaticResource SlimeAccentBrush}" />
+                    <TextBlock Text="{Binding LevelText}" 
+                               FontSize="12"
+                               Opacity="0.7" />
+                </StackPanel>
+            </Border>
+            
+            <!-- Happiness Bar -->
+            <Border Background="#1E1E1E" CornerRadius="12" Padding="16">
+                <StackPanel Spacing="8">
+                    <StackPanel Orientation="Horizontal" Spacing="10">
+                        <TextBlock Text="😊" FontSize="16" />
+                        <TextBlock Text="Happiness" FontWeight="SemiBold" />
+                        <TextBlock Text="{Binding HappinessPercent, StringFormat='{}{0}%'}" 
+                                   Opacity="0.7" />
+                    </StackPanel>
+                    <ProgressBar Value="{Binding HappinessPercent}" 
+                                 Maximum="100"
+                                 Height="12"
+                                 CornerRadius="6"
+                                 Foreground="#FFD54F" />
+                </StackPanel>
+            </Border>
+            
+            <!-- Energy Bar -->
+            <Border Background="#1E1E1E" CornerRadius="12" Padding="16">
+                <StackPanel Spacing="8">
+                    <StackPanel Orientation="Horizontal" Spacing="10">
+                        <TextBlock Text="⚡" FontSize="16" />
+                        <TextBlock Text="Energy" FontWeight="SemiBold" />
+                        <TextBlock Text="{Binding EnergyPercent, StringFormat='{}{0}%'}" 
+                                   Opacity="0.7" />
+                    </StackPanel>
+                    <ProgressBar Value="{Binding EnergyPercent}" 
+                                 Maximum="100"
+                                 Height="12"
+                                 CornerRadius="6"
+                                 Foreground="#64B5F6" />
+                </StackPanel>
+            </Border>
+            
+            <!-- Tasks Completed Today -->
+            <Border Background="#1E1E1E" CornerRadius="12" Padding="16">
+                <StackPanel Orientation="Horizontal" Spacing="16">
+                    <TextBlock Text="📋" FontSize="24" />
+                    <StackPanel>
+                        <TextBlock Text="Tasks Today" FontWeight="SemiBold" />
+                        <TextBlock Text="{Binding TasksCompletedToday, StringFormat='{}{0} completed'}" 
+                                   Opacity="0.7" />
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+            
+        </StackPanel>
+        
+        <!-- Actions -->
+        <StackPanel Grid.Row="2" Orientation="Horizontal" Spacing="10" Margin="0,20,0,0">
+            <Button Content="🍎 Feed" 
+                    Command="{Binding FeedCommand}"
+                    HorizontalAlignment="Stretch"
+                    HorizontalContentAlignment="Center" />
+            <Button Content="💤 Rest" 
+                    Command="{Binding RestCommand}"
+                    HorizontalAlignment="Stretch"
+                    HorizontalContentAlignment="Center" />
+            <Button Content="🎮 Play" 
+                    Command="{Binding PlayCommand}"
+                    HorizontalAlignment="Stretch"
+                    HorizontalContentAlignment="Center" />
+        </StackPanel>
+        
+    </Grid>
+</Window>

@@ -1,0 +1,79 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:SlimeNexus.UI.ViewModels"
+        x:Class="SlimeNexus.UI.Views.TrayIconWindow"
+        x:DataType="vm:TrayIconViewModel"
+        Title="SlimeNexus - System Tray"
+        Width="300" Height="400"
+        WindowStartupLocation="CenterScreen"
+        Background="#121212"
+        ShowInTaskbar="True"
+        CanResize="False">
+
+    <!-- Mini Dashboard (shows when tray is clicked) -->
+    <Grid Margin="16" RowDefinitions="Auto,*,Auto">
+
+        <!-- Header -->
+        <StackPanel Grid.Row="0" Spacing="8">
+            <StackPanel Orientation="Horizontal" Spacing="12">
+                <TextBlock Text="🐾" FontSize="32" VerticalAlignment="Center" />
+                <StackPanel VerticalAlignment="Center">
+                    <TextBlock Text="SlimeNexus" FontSize="18" FontWeight="Bold" />
+                    <TextBlock Text="{Binding TrayTooltip}" FontSize="11" Opacity="0.7" />
+                </StackPanel>
+            </StackPanel>
+
+            <!-- AI Status -->
+            <Border Background="#1E1E1E" CornerRadius="8" Padding="12" Margin="0,8,0,0">
+                <StackPanel Orientation="Horizontal" Spacing="10">
+                    <Ellipse Width="12" Height="12">
+                        <Ellipse.Fill>
+                            <SolidColorBrush Color="{Binding IsAiConnected, Converter={StaticResource BoolToGreenRedConverter}}" />
+                        </Ellipse.Fill>
+                    </Ellipse>
+                    <TextBlock Text="{Binding AiStatusText}" VerticalAlignment="Center" />
+                </StackPanel>
+            </Border>
+        </StackPanel>
+
+        <!-- Quick Actions -->
+        <StackPanel Grid.Row="1" Spacing="8" Margin="0,16,0,0">
+            <Button Content="🏠 Open Dashboard" 
+                    Command="{Binding OpenDashboardCommand}"
+                    HorizontalAlignment="Stretch"
+                    HorizontalContentAlignment="Left"
+                    Padding="12,10" />
+
+            <Button Content="🐾 Pet Status" 
+                    Command="{Binding OpenPetStatusCommand}"
+                    HorizontalAlignment="Stretch"
+                    HorizontalContentAlignment="Left"
+                    Padding="12,10" />
+
+            <Button Content="💻 Hardware Info" 
+                    Command="{Binding OpenHardwareCommand}"
+                    HorizontalAlignment="Stretch"
+                    HorizontalContentAlignment="Left"
+                    Padding="12,10" />
+
+            <Button Content="🔄 Check AI Status" 
+                    Command="{Binding CheckAiStatusCommand}"
+                    HorizontalAlignment="Stretch"
+                    HorizontalContentAlignment="Left"
+                    Padding="12,10" />
+        </StackPanel>
+
+        <!-- Footer -->
+        <StackPanel Grid.Row="2" Spacing="8">
+            <Separator />
+            <Button Content="❌ Exit Application" 
+                    Command="{Binding ExitCommand}"
+                    HorizontalAlignment="Stretch"
+                    HorizontalContentAlignment="Center"
+                    Padding="12,10"
+                    Background="#661111" />
+        </StackPanel>
+
+    </Grid>
+
+</Window>
