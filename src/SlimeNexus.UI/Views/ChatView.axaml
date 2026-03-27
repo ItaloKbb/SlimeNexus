@@ -1,6 +1,7 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:SlimeNexus.UI.ViewModels"
+             xmlns:md="clr-namespace:Markdown.Avalonia;assembly=Markdown.Avalonia"
              x:Class="SlimeNexus.UI.Views.ChatView"
              x:DataType="vm:ChatViewModel">
 
@@ -64,11 +65,16 @@
                                                    TextWrapping="Wrap"
                                                    Foreground="White"
                                                    FontSize="13" />
-                                        <TextBlock Text="{Binding Timestamp, StringFormat='{}{0:HH:mm}'}"
-                                                   FontSize="9"
-                                                   Opacity="0.5"
-                                                   Foreground="White"
-                                                   HorizontalAlignment="Right" />
+                                        <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Right">
+                                            <Button Content="📋" FontSize="10" Padding="4,2"
+                                                    Background="Transparent" Opacity="0.5"
+                                                    CornerRadius="4" ToolTip.Tip="Copiar"
+                                                    Command="{Binding $parent[ItemsControl].((vm:ChatViewModel)DataContext).CopyMessageCommand}"
+                                                    CommandParameter="{Binding}" />
+                                            <TextBlock Text="{Binding Timestamp, StringFormat='{}{0:HH:mm}'}"
+                                                       FontSize="9" Opacity="0.5" Foreground="White"
+                                                       VerticalAlignment="Center" />
+                                        </StackPanel>
                                     </StackPanel>
                                 </Border>
 
@@ -80,13 +86,19 @@
                                         HorizontalAlignment="Left"
                                         MaxWidth="500">
                                     <StackPanel Spacing="4">
-                                        <TextBlock Text="{Binding Content}"
-                                                   TextWrapping="Wrap"
-                                                   FontSize="13" />
-                                        <TextBlock Text="{Binding Timestamp, StringFormat='{}{0:HH:mm}'}"
-                                                   FontSize="9"
-                                                   Opacity="0.4"
-                                                   HorizontalAlignment="Left" />
+                                        <md:MarkdownScrollViewer x:CompileBindings="False"
+                                                                 Markdown="{Binding Content}" />
+                                        <StackPanel Orientation="Horizontal" Spacing="6">
+                                            <Button Content="📋" FontSize="10" Padding="4,2"
+                                                    Background="Transparent" Opacity="0.4"
+                                                    CornerRadius="4" ToolTip.Tip="Copiar"
+                                                    x:CompileBindings="False"
+                                                    Command="{Binding $parent[ItemsControl].DataContext.CopyMessageCommand}"
+                                                    CommandParameter="{Binding}" />
+                                            <TextBlock Text="{Binding Timestamp, StringFormat='{}{0:HH:mm}'}"
+                                                       FontSize="9" Opacity="0.4"
+                                                       VerticalAlignment="Center" />
+                                        </StackPanel>
                                     </StackPanel>
                                 </Border>
 
@@ -96,12 +108,204 @@
                                         Padding="12,6"
                                         CornerRadius="12"
                                         Background="#1a1a2e"
+                                        MaxWidth="500"
                                         Opacity="0.8">
-                                    <TextBlock Text="{Binding Content}"
-                                               TextWrapping="Wrap"
-                                               FontSize="12"
-                                               HorizontalAlignment="Center"
-                                               Opacity="0.7" />
+                                    <StackPanel Spacing="2">
+                                        <md:MarkdownScrollViewer x:CompileBindings="False"
+                                                                  Markdown="{Binding Content}"
+                                                                  Opacity="0.7" />
+                                        <Button Content="📋" FontSize="10" Padding="4,2"
+                                                Background="Transparent" Opacity="0.4"
+                                                CornerRadius="4" ToolTip.Tip="Copiar"
+                                                HorizontalAlignment="Right"
+                                                x:CompileBindings="False"
+                                                Command="{Binding $parent[ItemsControl].DataContext.CopyMessageCommand}"
+                                                CommandParameter="{Binding}" />
+                                    </StackPanel>
+                                </Border>
+
+                                <!-- Agent Task Card (GitHub Copilot style) -->
+                                <Border IsVisible="{Binding IsAgentTask}"
+                                        x:CompileBindings="False"
+                                        Background="#1a1a2e"
+                                        CornerRadius="12"
+                                        Padding="16"
+                                        HorizontalAlignment="Stretch"
+                                        Margin="0,4">
+                                    <StackPanel Spacing="10">
+
+                                        <!-- Header: Icon + Title + Status Badge + Copy -->
+                                        <Grid ColumnDefinitions="Auto,*,Auto,Auto">
+                                            <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8">
+                                                <TextBlock Text="{Binding AgentSession.TaskIcon}" FontSize="20"
+                                                           VerticalAlignment="Center" />
+                                                <TextBlock Text="{Binding AgentSession.TaskTitle}" FontSize="16"
+                                                           FontWeight="Bold" Foreground="White"
+                                                           VerticalAlignment="Center" />
+                                            </StackPanel>
+                                            <Border Grid.Column="2" CornerRadius="10" Padding="10,4"
+                                                    Background="#252540" Margin="0,0,6,0">
+                                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                                    <TextBlock Text="{Binding AgentSession.StatusIcon}" FontSize="12"
+                                                               VerticalAlignment="Center" />
+                                                    <TextBlock Text="{Binding AgentSession.StatusText}" FontSize="10"
+                                                               Opacity="0.7" VerticalAlignment="Center" />
+                                                </StackPanel>
+                                            </Border>
+                                            <Button Grid.Column="3" Content="📋" FontSize="12"
+                                                    Padding="6,4" Background="Transparent"
+                                                    Opacity="0.4" CornerRadius="6"
+                                                    ToolTip.Tip="Copiar detalhes"
+                                                    Command="{Binding $parent[ItemsControl].DataContext.CopyMessageCommand}"
+                                                    CommandParameter="{Binding}" />
+                                        </Grid>
+
+                                        <!-- Task Info Panel -->
+                                        <Border Background="#111122" CornerRadius="8" Padding="12">
+                                            <StackPanel Spacing="6">
+                                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                                    <TextBlock Text="🎯" FontSize="12" VerticalAlignment="Center" />
+                                                    <TextBlock Text="Tipo:" FontSize="11" Opacity="0.5"
+                                                               VerticalAlignment="Center" />
+                                                    <TextBlock Text="{Binding AgentSession.TaskType}" FontSize="11"
+                                                               Foreground="#6c5ce7" FontWeight="SemiBold"
+                                                               VerticalAlignment="Center" />
+                                                </StackPanel>
+                                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                                    <TextBlock Text="📝" FontSize="12" VerticalAlignment="Center" />
+                                                    <TextBlock Text="Keywords:" FontSize="11" Opacity="0.5"
+                                                               VerticalAlignment="Center" />
+                                                    <TextBlock Text="{Binding AgentSession.UserKeywords}" FontSize="11"
+                                                               Foreground="#f1c40f" TextWrapping="Wrap"
+                                                               VerticalAlignment="Center" />
+                                                </StackPanel>
+                                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                                    <TextBlock Text="⏱️" FontSize="12" VerticalAlignment="Center" />
+                                                    <TextBlock Text="Estimado:" FontSize="11" Opacity="0.5"
+                                                               VerticalAlignment="Center" />
+                                                    <TextBlock Text="{Binding AgentSession.EstimatedTime}"
+                                                               FontSize="11" VerticalAlignment="Center" />
+                                                </StackPanel>
+                                                <StackPanel Orientation="Horizontal" Spacing="8"
+                                                            IsVisible="{Binding AgentSession.StackAnalysis, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+                                                    <TextBlock Text="🔍" FontSize="12" VerticalAlignment="Center" />
+                                                    <TextBlock Text="Stack:" FontSize="11" Opacity="0.5"
+                                                               VerticalAlignment="Center" />
+                                                    <TextBlock Text="{Binding AgentSession.StackAnalysis}"
+                                                               FontSize="11" VerticalAlignment="Center" />
+                                                </StackPanel>
+                                            </StackPanel>
+                                        </Border>
+
+                                        <!-- Affected Files -->
+                                        <Border Background="#111122" CornerRadius="8" Padding="12"
+                                                IsVisible="{Binding AgentSession.HasAffectedFiles}">
+                                            <StackPanel Spacing="4">
+                                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                                    <TextBlock Text="📁" FontSize="12" />
+                                                    <TextBlock Text="{Binding AgentSession.FileCount, StringFormat='Arquivos afetados ({0})'}"
+                                                               FontSize="11" FontWeight="SemiBold" Opacity="0.7" />
+                                                </StackPanel>
+                                                <ItemsControl ItemsSource="{Binding AgentSession.AffectedFiles}"
+                                                              Margin="20,4,0,0">
+                                                    <ItemsControl.ItemTemplate>
+                                                        <DataTemplate>
+                                                            <TextBlock Text="{Binding}" FontSize="10" Opacity="0.6"
+                                                                       FontFamily="Cascadia Code,Consolas,monospace"
+                                                                       Margin="0,1" />
+                                                        </DataTemplate>
+                                                    </ItemsControl.ItemTemplate>
+                                                </ItemsControl>
+                                            </StackPanel>
+                                        </Border>
+
+                                        <!-- Agent Steps -->
+                                        <Border Background="#111122" CornerRadius="8" Padding="12">
+                                            <StackPanel Spacing="2">
+                                                <TextBlock Text="Etapas do Agente" FontSize="11"
+                                                           FontWeight="SemiBold" Opacity="0.7"
+                                                           Margin="0,0,0,6" />
+                                                <ItemsControl ItemsSource="{Binding AgentSession.Steps}">
+                                                    <ItemsControl.ItemTemplate>
+                                                        <DataTemplate>
+                                                            <Grid ColumnDefinitions="20,Auto,*,Auto" Margin="0,2">
+                                                                <TextBlock Grid.Column="0"
+                                                                           Text="{Binding StatusIcon}"
+                                                                           FontSize="11"
+                                                                           VerticalAlignment="Center" />
+                                                                <TextBlock Grid.Column="1"
+                                                                           Text="{Binding Icon}"
+                                                                           FontSize="11"
+                                                                           VerticalAlignment="Center"
+                                                                           Margin="0,0,6,0" />
+                                                                <TextBlock Grid.Column="2"
+                                                                           Text="{Binding Title}"
+                                                                           FontSize="11" Opacity="0.8"
+                                                                           VerticalAlignment="Center" />
+                                                                <TextBlock Grid.Column="3"
+                                                                           Text="{Binding Detail}"
+                                                                           FontSize="10" Opacity="0.5"
+                                                                           VerticalAlignment="Center"
+                                                                           IsVisible="{Binding Detail, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                                                            </Grid>
+                                                        </DataTemplate>
+                                                    </ItemsControl.ItemTemplate>
+                                                </ItemsControl>
+                                            </StackPanel>
+                                        </Border>
+
+                                        <!-- OpenClaw Request -->
+                                        <Border Background="#111122" CornerRadius="8" Padding="12"
+                                                IsVisible="{Binding AgentSession.OpenClawRequest, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+                                            <StackPanel Spacing="4">
+                                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                                    <TextBlock Text="🔗" FontSize="12" />
+                                                    <TextBlock Text="Solicitação OpenClaw" FontSize="11"
+                                                               FontWeight="SemiBold" Opacity="0.7" />
+                                                </StackPanel>
+                                                <TextBlock Text="{Binding AgentSession.OpenClawRequest}"
+                                                           FontSize="10" Opacity="0.6"
+                                                           FontFamily="Cascadia Code,Consolas,monospace"
+                                                           TextWrapping="Wrap" />
+                                            </StackPanel>
+                                        </Border>
+
+                                        <!-- Improved Prompt -->
+                                        <Border Background="#111122" CornerRadius="8" Padding="12"
+                                                IsVisible="{Binding AgentSession.ImprovedPrompt, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+                                            <StackPanel Spacing="4">
+                                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                                    <TextBlock Text="🧠" FontSize="12" />
+                                                    <TextBlock Text="Prompt otimizado" FontSize="11"
+                                                               FontWeight="SemiBold" Opacity="0.7" />
+                                                </StackPanel>
+                                                <TextBlock Text="{Binding AgentSession.ImprovedPrompt}"
+                                                           FontSize="10" Opacity="0.6"
+                                                           FontFamily="Cascadia Code,Consolas,monospace"
+                                                           TextWrapping="Wrap" />
+                                            </StackPanel>
+                                        </Border>
+
+                                        <!-- Progress Bar -->
+                                        <ProgressBar Value="{Binding AgentSession.ProgressPercent}"
+                                                     Maximum="100" Height="4" CornerRadius="2"
+                                                     IsVisible="{Binding AgentSession.IsRunning}" />
+
+                                        <!-- Result - Success -->
+                                        <Border Background="#1a2e1a" CornerRadius="8" Padding="12"
+                                                IsVisible="{Binding AgentSession.IsCompleted}">
+                                            <TextBlock Text="{Binding AgentSession.ResultSummary}" FontSize="11"
+                                                       Foreground="#2ecc71" TextWrapping="Wrap" />
+                                        </Border>
+
+                                        <!-- Result - Failure -->
+                                        <Border Background="#2e1a1a" CornerRadius="8" Padding="12"
+                                                IsVisible="{Binding AgentSession.IsFailed}">
+                                            <TextBlock Text="{Binding AgentSession.ResultSummary}" FontSize="11"
+                                                       Foreground="#e74c3c" TextWrapping="Wrap" />
+                                        </Border>
+
+                                    </StackPanel>
                                 </Border>
 
                             </Panel>
@@ -128,29 +332,116 @@
 
         <!-- Input -->
         <Border Grid.Row="2" Background="#1a1a2e" CornerRadius="12" Padding="8">
-            <Grid ColumnDefinitions="*,Auto">
-                <TextBox Text="{Binding UserMessage, Mode=TwoWay}"
-                         Watermark="Digite sua mensagem..."
-                         Background="#0d0d1a"
-                         CornerRadius="10"
-                         Padding="14,10"
-                         FontSize="13"
-                         BorderThickness="0"
-                         AcceptsReturn="False"
-                         KeyDown="OnInputKeyDown" />
-                <Button Grid.Column="1"
-                        Content="➤"
-                        Command="{Binding SendMessageCommand}"
-                        FontSize="18"
-                        Width="44" Height="44"
-                        Padding="0"
-                        CornerRadius="10"
-                        Background="#6c5ce7"
-                        Foreground="White"
-                        Margin="8,0,0,0"
-                        HorizontalContentAlignment="Center"
-                        VerticalContentAlignment="Center" />
-            </Grid>
+            <StackPanel Spacing="8">
+
+                <!-- Toolbar: Folder + Agent + Prompt selectors -->
+                <Grid ColumnDefinitions="*,Auto,Auto" RowDefinitions="Auto">
+
+                    <!-- Folder selector -->
+                    <Border Background="#0d0d1a" CornerRadius="8" Padding="4,3" Margin="0,0,6,0">
+                        <Grid ColumnDefinitions="Auto,*,Auto,Auto">
+                            <TextBlock Grid.Column="0" Text="📁" FontSize="13" VerticalAlignment="Center"
+                                       Margin="6,0,6,0" />
+                            <TextBlock Grid.Column="1"
+                                       Text="{Binding TargetFolder}"
+                                       FontSize="11" Opacity="0.7"
+                                       VerticalAlignment="Center"
+                                       TextTrimming="CharacterEllipsis"
+                                       IsVisible="{Binding TargetFolder, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                            <TextBlock Grid.Column="1"
+                                       Text="Nenhuma pasta selecionada"
+                                       FontSize="11" Opacity="0.35"
+                                       VerticalAlignment="Center"
+                                       IsVisible="{Binding TargetFolder, Converter={x:Static StringConverters.IsNullOrEmpty}}" />
+                            <Button Grid.Column="2" Content="✕" FontSize="9" Padding="4,2"
+                                    Background="Transparent" Opacity="0.4" CornerRadius="4"
+                                    ToolTip.Tip="Limpar pasta"
+                                    Command="{Binding ClearFolderCommand}"
+                                    IsVisible="{Binding TargetFolder, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+                            <Button Grid.Column="3" Content="📂" FontSize="12" Padding="6,3"
+                                    Background="#252540" CornerRadius="6"
+                                    ToolTip.Tip="Selecionar pasta"
+                                    Command="{Binding BrowseFolderCommand}" />
+                        </Grid>
+                    </Border>
+
+                    <!-- Agent selector -->
+                    <ComboBox Grid.Column="1"
+                              ItemsSource="{Binding AvailableAgents}"
+                              SelectedItem="{Binding SelectedAgent}"
+                              MinWidth="150" MaxWidth="200"
+                              FontSize="11"
+                              Background="#0d0d1a"
+                              CornerRadius="8"
+                              Padding="8,4"
+                              Margin="0,0,6,0"
+                              ToolTip.Tip="Tipo de agente">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate x:CompileBindings="False">
+                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                    <TextBlock Text="{Binding Icon}" FontSize="12" VerticalAlignment="Center" />
+                                    <StackPanel>
+                                        <TextBlock Text="{Binding Name}" FontSize="11" />
+                                        <TextBlock Text="{Binding Description}" FontSize="9" Opacity="0.5"
+                                                   TextTrimming="CharacterEllipsis" MaxWidth="180" />
+                                    </StackPanel>
+                                </StackPanel>
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+
+                    <!-- Prompt template selector -->
+                    <ComboBox Grid.Column="2"
+                              ItemsSource="{Binding AvailablePrompts}"
+                              SelectedItem="{Binding SelectedPrompt}"
+                              MinWidth="150" MaxWidth="200"
+                              FontSize="11"
+                              Background="#0d0d1a"
+                              CornerRadius="8"
+                              Padding="8,4"
+                              ToolTip.Tip="Template de prompt">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate x:CompileBindings="False">
+                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                    <TextBlock Text="{Binding Icon}" FontSize="12" VerticalAlignment="Center" />
+                                    <StackPanel>
+                                        <TextBlock Text="{Binding Name}" FontSize="11" />
+                                        <TextBlock Text="{Binding Description}" FontSize="9" Opacity="0.5"
+                                                   TextTrimming="CharacterEllipsis" MaxWidth="180" />
+                                    </StackPanel>
+                                </StackPanel>
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+
+                </Grid>
+
+                <!-- Message input + send button -->
+                <Grid ColumnDefinitions="*,Auto">
+                    <TextBox Text="{Binding UserMessage, Mode=TwoWay}"
+                             Watermark="Digite sua mensagem..."
+                             Background="#0d0d1a"
+                             CornerRadius="10"
+                             Padding="14,10"
+                             FontSize="13"
+                             BorderThickness="0"
+                             AcceptsReturn="False"
+                             KeyDown="OnInputKeyDown" />
+                    <Button Grid.Column="1"
+                            Content="➤"
+                            Command="{Binding SendMessageCommand}"
+                            FontSize="18"
+                            Width="44" Height="44"
+                            Padding="0"
+                            CornerRadius="10"
+                            Background="#6c5ce7"
+                            Foreground="White"
+                            Margin="8,0,0,0"
+                            HorizontalContentAlignment="Center"
+                            VerticalContentAlignment="Center" />
+                </Grid>
+
+            </StackPanel>
         </Border>
 
     </Grid>

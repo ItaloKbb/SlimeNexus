@@ -26,7 +26,7 @@
     <Company>ItaloKbb</Company>
     <Authors>ItaloKbb</Authors>
     <Description>SlimeNexus - Desktop agent for the AI Tamagotchi. A local brain that manages hardware monitoring, AI inference, and task execution.</Description>
-    <Copyright>Copyright © 2024 ItaloKbb</Copyright>
+    <Copyright>Copyright ï¿½ 2024 ItaloKbb</Copyright>
   </PropertyGroup>
 
   <!-- Publish settings (applied only during dotnet publish) -->
@@ -52,6 +52,7 @@
     <PackageReference Include="Avalonia.Diagnostics" Version="11.1.3" Condition="'$(Configuration)' == 'Debug'" />
     <!-- MVVM Framework -->
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.3.2" />
+    <PackageReference Include="Markdown.Avalonia" Version="11.0.2" />
     <!-- Dependency Injection -->
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.0" />
     <PackageReference Include="Microsoft.Extensions.Http" Version="9.0.0" />

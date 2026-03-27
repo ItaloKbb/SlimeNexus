@@ -19,6 +19,8 @@ public static class DependencyInjection
     {
         // Services
         services.AddSingleton<InstallerService>();
+        services.AddSingleton<AgentProfileStore>();
+        services.AddSingleton<PromptTemplateStore>();
 
         // ViewModels (Transient - new instance per request)
         services.AddTransient<MainWindowViewModel>();

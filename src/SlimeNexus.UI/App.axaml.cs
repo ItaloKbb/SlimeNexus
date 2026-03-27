@@ -1,3 +1,4 @@
+using System.Reflection;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
@@ -177,9 +178,33 @@ public partial class App : Application
 
     private static bool ShouldShowInstaller()
     {
-        // Check if installation has been completed before
         var configPath = GetInstallationFlagPath();
-        return !File.Exists(configPath);
+
+        // If the flag file doesn't exist, this is a first install
+        if (!File.Exists(configPath))
+            return true;
+
+        // If the flag file exists, check if it matches the current version.
+        // When a new version is installed (via Velopack or manually), the installer
+        // should re-run to validate/update the environment.
+        try
+        {
+            var storedContent = File.ReadAllText(configPath).Trim();
+            var currentVersion = GetCurrentAppVersion();
+
+            // Legacy format: file contains only a date (no version).
+            // Force re-install to migrate to versioned flag.
+            if (!storedContent.Contains('|'))
+                return true;
+
+            var storedVersion = storedContent.Split('|')[0];
+            return !string.Equals(storedVersion, currentVersion, StringComparison.OrdinalIgnoreCase);
+        }
+        catch
+        {
+            // If we can't read the file, assume installer is needed
+            return true;
+        }
     }
 
     private static void MarkInstallationComplete()
@@ -192,7 +217,9 @@ public partial class App : Application
             {
                 Directory.CreateDirectory(directory);
             }
-            File.WriteAllText(configPath, DateTime.UtcNow.ToString("O"));
+            // Store version + timestamp so we can detect version changes
+            var version = GetCurrentAppVersion();
+            File.WriteAllText(configPath, $"{version}|{DateTime.UtcNow:O}");
         }
         catch
         {
@@ -204,5 +231,37 @@ public partial class App : Application
     {
         var appData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
         return Path.Combine(appData, "SlimeNexus", ".installed");
+    }
+
+    /// <summary>
+    /// Gets the current application version from the assembly.
+    /// </summary>
+    private static string GetCurrentAppVersion()
+    {
+        return Assembly.GetExecutingAssembly()
+            .GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion
+            ?? Assembly.GetExecutingAssembly().GetName().Version?.ToString()
+            ?? InstallerService.AppVersion;
+    }
+
+    /// <summary>
+    /// Resets the installation flag, forcing the installer wizard to show on next startup.
+    /// Can be called from settings/UI to allow a full reinstall.
+    /// </summary>
+    public static bool ResetInstallation()
+    {
+        try
+        {
+            var flagPath = GetInstallationFlagPath();
+            if (File.Exists(flagPath))
+            {
+                File.Delete(flagPath);
+            }
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
     }
 }

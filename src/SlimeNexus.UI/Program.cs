@@ -18,7 +18,48 @@ VelopackApp.Build()
         // First run after install - create desktop shortcut, etc.
         System.Diagnostics.Debug.WriteLine($"SlimeNexus v{v} installed successfully!");
     })
+    .WithAfterUpdateFastCallback((v) =>
+    {
+        // After Velopack applies an update, delete the installation flag
+        // so the installer wizard runs again on next startup.
+        try
+        {
+            var flagPath = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                "SlimeNexus", ".installed");
+            if (File.Exists(flagPath))
+            {
+                File.Delete(flagPath);
+                System.Diagnostics.Debug.WriteLine(
+                    $"SlimeNexus updated to v{v} — installation flag cleared for re-setup.");
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Failed to clear installation flag: {ex.Message}");
+        }
+    })
     .Run();
+
+// Handle --reinstall flag: force the installer to run by deleting the flag
+if (args.Contains("--reinstall", StringComparer.OrdinalIgnoreCase))
+{
+    try
+    {
+        var flagPath = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+            "SlimeNexus", ".installed");
+        if (File.Exists(flagPath))
+        {
+            File.Delete(flagPath);
+            System.Diagnostics.Debug.WriteLine("Installation flag cleared — reinstall mode active.");
+        }
+    }
+    catch (Exception ex)
+    {
+        System.Diagnostics.Debug.WriteLine($"Failed to clear installation flag for reinstall: {ex.Message}");
+    }
+}
 
 // Single instance mutex
 const string mutexName = "SlimeNexus_SingleInstance_Mutex";

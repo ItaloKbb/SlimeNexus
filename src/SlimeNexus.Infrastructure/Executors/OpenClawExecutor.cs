@@ -188,19 +188,29 @@ public sealed class OpenClawExecutor : ITaskExecutor
                 ErrorCodes.InvalidMetadata);
         }
 
-        var csFiles = Directory.GetFiles(metadata.TargetFolder, "*.cs", SearchOption.AllDirectories);
+        var codeExtensions = new[] { "*.cs", "*.ts", "*.tsx", "*.js", "*.jsx", "*.py", "*.prisma", "*.json", "*.yaml", "*.yml", "*.xml", "*.sql", "*.html", "*.css", "*.scss", "*.razor", "*.vue", "*.go", "*.rs", "*.java", "*.kt" };
+        var codeFiles = codeExtensions
+            .SelectMany(ext =>
+            {
+                try { return Directory.GetFiles(metadata.TargetFolder, ext, SearchOption.AllDirectories); }
+                catch { return Array.Empty<string>(); }
+            })
+            .Distinct()
+            .ToArray();
         var staticIssues = new List<string>();
         var totalFiles = 0;
         var totalLines = 0;
         var codeSnippets = new List<(string Path, string Content)>();
 
-        foreach (var file in csFiles)
+        foreach (var file in codeFiles)
         {
             cancellationToken.ThrowIfCancellationRequested();
 
             var relativePath = Path.GetRelativePath(metadata.TargetFolder, file);
             if (relativePath.Contains($"bin{Path.DirectorySeparatorChar}", StringComparison.Ordinal) ||
-                relativePath.Contains($"obj{Path.DirectorySeparatorChar}", StringComparison.Ordinal))
+                relativePath.Contains($"obj{Path.DirectorySeparatorChar}", StringComparison.Ordinal) ||
+                relativePath.Contains($"node_modules{Path.DirectorySeparatorChar}", StringComparison.Ordinal) ||
+                relativePath.Contains($".vs{Path.DirectorySeparatorChar}", StringComparison.Ordinal))
                 continue;
 
             var lines = await File.ReadAllLinesAsync(file, cancellationToken);
@@ -246,7 +256,12 @@ public sealed class OpenClawExecutor : ITaskExecutor
             if (codeForReview.Length > 6000)
                 codeForReview = codeForReview[..6000] + "\n// ... (truncated)";
 
-            var prompt = "Você é um revisor de código sênior. Analise o código C# abaixo e forneça uma revisão concisa em português.\n" +
+            var contextHint = !string.IsNullOrWhiteSpace(metadata.ContextPrompt)
+                ? $"Foco especial: {metadata.ContextPrompt}\n"
+                : "";
+
+            var prompt = "Você é um revisor de código sênior. Analise o código abaixo e forneça uma revisão concisa em português.\n" +
+                contextHint +
                 "Aponte: bugs potenciais, problemas de segurança, melhorias de performance e boas práticas violadas.\n" +
                 "Responda de forma objetiva, usando bullet points.\n\n" +
                 codeForReview;
