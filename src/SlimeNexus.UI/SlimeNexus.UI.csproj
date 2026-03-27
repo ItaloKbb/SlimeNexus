@@ -8,6 +8,7 @@
     <LangVersion>latest</LangVersion>
     <RootNamespace>SlimeNexus.UI</RootNamespace>
     <AssemblyName>SlimeNexus</AssemblyName>
+    <ApplicationIcon>Assets\slime.ico</ApplicationIcon>
     <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
 
     <!-- Ensure Windows GUI subsystem -->

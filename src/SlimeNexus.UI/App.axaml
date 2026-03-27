@@ -8,6 +8,23 @@
         <FluentTheme />
     </Application.Styles>
 
+    <TrayIcon.Icons>
+        <TrayIcons>
+            <TrayIcon Icon="avares://SlimeNexus/Assets/slime.ico"
+                      ToolTipText="SlimeNexus - AI Pet Assistant">
+                <TrayIcon.Menu>
+                    <NativeMenu>
+                        <NativeMenuItem Header="Abrir Painel"/>
+                        <NativeMenuItem Header="Dashboard"/>
+                        <NativeMenuItem Header="Info de Hardware"/>
+                        <NativeMenuItemSeparator/>
+                        <NativeMenuItem Header="Sair"/>
+                    </NativeMenu>
+                </TrayIcon.Menu>
+            </TrayIcon>
+        </TrayIcons>
+    </TrayIcon.Icons>
+
     <Application.Resources>
         <ResourceDictionary>
             <!-- Converters -->

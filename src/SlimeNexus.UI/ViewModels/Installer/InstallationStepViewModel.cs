@@ -1,4 +1,7 @@
 using System.Collections.ObjectModel;
+using System.Text;
+using Avalonia;
+using Avalonia.Controls.ApplicationLifetimes;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using SlimeNexus.UI.Services;
@@ -31,6 +34,11 @@ public sealed partial class InstallationStepViewModel : InstallerStepViewModelBa
     [ObservableProperty]
     private string _errorMessage = string.Empty;
 
+    [ObservableProperty]
+    private bool _logsCopied;
+
+    public ObservableCollection<string> InstallationLogs { get; } = [];
+
     public ObservableCollection<InstallationTaskViewModel> Tasks { get; } = [];
 
     public InstallationStepViewModel(
@@ -42,7 +50,7 @@ public sealed partial class InstallationStepViewModel : InstallerStepViewModelBa
         Description = "Configurando o SlimeNexus no seu sistema";
         Icon = "📦";
         CanGoBack = true; // Can go back before starting
-        CanGoNext = false; // Can't proceed until complete
+        CanGoNext = true; // Enabled so the "Instalar" button is clickable
     }
 
     public override async Task OnEnteringAsync()
@@ -118,8 +126,14 @@ public sealed partial class InstallationStepViewModel : InstallerStepViewModelBa
         InstallationStarted = true;
         InstallationFailed = false;
         CanGoBack = false;
+        CanGoNext = false; // Disable during installation to prevent repeated clicks
         Wizard.IsInstalling = true;
+        LogsCopied = false;
+        InstallationLogs.Clear();
         UpdateWizardNavigation();
+
+        AddLog($"Instalação iniciada em {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
+        AddLog($"Modelo selecionado: {Wizard.SelectedModel}");
 
         _cts = new CancellationTokenSource();
 
@@ -135,23 +149,44 @@ public sealed partial class InstallationStepViewModel : InstallerStepViewModelBa
             // Task 2: Install Ollama
             await ExecuteTaskAsync("ollama", async () =>
             {
-                var progress = new Progress<string>(msg => CurrentTask = msg);
+                var progress = new Progress<string>(msg =>
+                {
+                    CurrentTask = msg;
+                    AddLog($"  [Ollama] {msg}");
+                });
                 return await _installerService.InstallOllamaAsync(progress, _cts.Token);
             });
 
             // Task 3: Download model
+            string? lastDownloadError = null;
             await ExecuteTaskAsync("model", async () =>
             {
                 var progress = new Progress<ModelDownloadProgress>(p =>
                 {
                     CurrentTask = p.Message;
-                    UpdateTaskProgress("model", p.Percent);
+                    if (p.Percent >= 0)
+                    {
+                        UpdateTaskProgress("model", p.Percent);
+                    }
+                    else
+                    {
+                        // Negative percent indicates an error message
+                        lastDownloadError = p.Message;
+                        AddLog($"  [Download] {p.Message}");
+                    }
                 });
 
-                return await _installerService.DownloadModelAsync(
+                var success = await _installerService.DownloadModelAsync(
                     Wizard.SelectedModel, 
                     progress, 
                     _cts.Token);
+
+                if (!success && lastDownloadError is not null)
+                {
+                    throw new Exception(lastDownloadError);
+                }
+
+                return success;
             });
 
             // Task 4: Configure app
@@ -175,18 +210,22 @@ public sealed partial class InstallationStepViewModel : InstallerStepViewModelBa
             OverallProgress = 100;
             CurrentTask = "✅ Instalação concluída com sucesso!";
             CanGoNext = true;
+            AddLog("Instalação concluída com sucesso.");
         }
         catch (OperationCanceledException)
         {
             InstallationFailed = true;
             ErrorMessage = "Instalação cancelada pelo usuário.";
             CanGoBack = true;
+            AddLog("Instalação cancelada pelo usuário.");
         }
         catch (Exception ex)
         {
             InstallationFailed = true;
             ErrorMessage = $"Erro durante instalação: {ex.Message}";
             CanGoBack = true;
+            AddLog($"ERRO: {ex.Message}");
+            AddLog($"StackTrace: {ex.StackTrace}");
         }
         finally
         {
@@ -205,18 +244,22 @@ public sealed partial class InstallationStepViewModel : InstallerStepViewModelBa
         task.Status = TaskStatus.Running;
         task.Progress = 0;
         CurrentTask = task.Name;
+        AddLog($"[Iniciando] {task.Name}");
 
         try
         {
             var success = await action();
-            
+
             task.Progress = 100;
             task.Status = success ? TaskStatus.Completed : TaskStatus.Failed;
 
             if (!success)
             {
+                AddLog($"[Falha] {task.Name}");
                 throw new Exception($"Falha em: {task.Name}");
             }
+
+            AddLog($"[Concluído] {task.Name}");
 
             // Update overall progress
             var completedCount = Tasks.Count(t => t.Status == TaskStatus.Completed);
@@ -242,6 +285,52 @@ public sealed partial class InstallationStepViewModel : InstallerStepViewModelBa
     private void CancelInstallation()
     {
         _cts?.Cancel();
+    }
+
+    [RelayCommand]
+    private async Task CopyLogsAsync()
+    {
+        var clipboard = (Application.Current?.ApplicationLifetime
+            as IClassicDesktopStyleApplicationLifetime)?.MainWindow?.Clipboard;
+
+        if (clipboard is null) return;
+
+        await clipboard.SetTextAsync(BuildLogText());
+        LogsCopied = true;
+    }
+
+    private string BuildLogText()
+    {
+        var sb = new StringBuilder();
+        sb.AppendLine("=== SlimeNexus - Log de Instalação ===");
+        sb.AppendLine($"Data: {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
+        sb.AppendLine($"Modelo: {Wizard.SelectedModel}");
+        sb.AppendLine();
+
+        foreach (var log in InstallationLogs)
+        {
+            sb.AppendLine(log);
+        }
+
+        if (InstallationFailed)
+        {
+            sb.AppendLine();
+            sb.AppendLine($"Erro: {ErrorMessage}");
+        }
+
+        sb.AppendLine();
+        sb.AppendLine("--- Status das Tarefas ---");
+        foreach (var task in Tasks)
+        {
+            sb.AppendLine($"  {task.StatusIcon} {task.Name}: {task.Status} ({task.Progress}%)");
+        }
+
+        return sb.ToString();
+    }
+
+    private void AddLog(string message)
+    {
+        InstallationLogs.Add($"[{DateTime.Now:HH:mm:ss}] {message}");
     }
 }
 

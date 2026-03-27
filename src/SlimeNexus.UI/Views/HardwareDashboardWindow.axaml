@@ -3,6 +3,7 @@
         xmlns:views="using:SlimeNexus.UI.Views"
         x:Class="SlimeNexus.UI.Views.HardwareDashboardWindow"
         Title="🖥️ Hardware Dashboard"
+        Icon="avares://SlimeNexus/Assets/slime.ico"
         Width="600" Height="700"
         WindowStartupLocation="CenterScreen"
         Background="#121212">

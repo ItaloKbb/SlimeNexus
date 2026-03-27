@@ -138,13 +138,50 @@
                     <TextBlock Text="{Binding ErrorMessage}" 
                                Foreground="#f0a0a0"
                                TextWrapping="Wrap"/>
-                    <Button Content="🔄 Tentar Novamente"
-                            Command="{Binding StartInstallationCommand}"
-                            HorizontalAlignment="Center"
-                            Padding="16,8"
-                            Background="#2a2a4e"
-                            Foreground="White"
-                            CornerRadius="8"/>
+
+                    <!-- Installation logs -->
+                    <Border Background="#2a1a1a" 
+                            CornerRadius="8" 
+                            Padding="12"
+                            MaxHeight="160">
+                        <ScrollViewer>
+                            <ItemsControl ItemsSource="{Binding InstallationLogs}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <TextBlock Text="{Binding}" 
+                                                   Foreground="#c0a0a0" 
+                                                   FontSize="11"
+                                                   FontFamily="Consolas,Courier New,monospace"
+                                                   TextWrapping="Wrap"/>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </ScrollViewer>
+                    </Border>
+
+                    <!-- Action buttons -->
+                    <StackPanel Orientation="Horizontal" 
+                                Spacing="12" 
+                                HorizontalAlignment="Center">
+                        <Button Content="🔄 Tentar Novamente"
+                                Command="{Binding StartInstallationCommand}"
+                                Padding="16,8"
+                                Background="#2a2a4e"
+                                Foreground="White"
+                                CornerRadius="8"/>
+                        <Button Command="{Binding CopyLogsCommand}"
+                                Padding="16,8"
+                                Background="#2a2a4e"
+                                Foreground="White"
+                                CornerRadius="8">
+                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                <TextBlock Text="📋 Copiar Logs" 
+                                           IsVisible="{Binding !LogsCopied}"/>
+                                <TextBlock Text="✅ Logs Copiados" 
+                                           IsVisible="{Binding LogsCopied}"/>
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
                 </StackPanel>
             </Border>
 

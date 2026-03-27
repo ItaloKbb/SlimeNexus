@@ -28,6 +28,14 @@ if (!createdNew)
 {
     // Another instance is already running
     System.Diagnostics.Debug.WriteLine("SlimeNexus is already running.");
+    try
+    {
+        var logDir = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "SlimeNexus");
+        Directory.CreateDirectory(logDir);
+        File.WriteAllText(Path.Combine(logDir, "crash.log"), $"[{DateTime.UtcNow:O}] Mutex: another instance already running");
+    }
+    catch { }
     return 1;
 }
 
@@ -57,6 +65,15 @@ try
 catch (Exception ex)
 {
     System.Diagnostics.Debug.WriteLine($"Fatal error: {ex}");
+    try
+    {
+        var crashLog = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+            "SlimeNexus", "crash.log");
+        Directory.CreateDirectory(Path.GetDirectoryName(crashLog)!);
+        File.WriteAllText(crashLog, $"[{DateTime.UtcNow:O}] Fatal error:\n{ex}");
+    }
+    catch { /* ignore logging errors */ }
     return 1;
 }
 

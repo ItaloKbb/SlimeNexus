@@ -4,6 +4,7 @@
         x:Class="SlimeNexus.UI.Views.PetStatusView"
         x:DataType="vm:PetStatusViewModel"
         Title="🐾 Pet Status"
+        Icon="avares://SlimeNexus/Assets/slime.ico"
         Width="400" Height="500"
         WindowStartupLocation="CenterScreen"
         Background="#121212"

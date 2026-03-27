@@ -3,11 +3,12 @@
         xmlns:vm="using:SlimeNexus.UI.ViewModels"
         x:Class="SlimeNexus.UI.Views.TrayIconWindow"
         x:DataType="vm:TrayIconViewModel"
-        Title="SlimeNexus - System Tray"
+        Title="SlimeNexus"
+        Icon="avares://SlimeNexus/Assets/slime.ico"
         Width="300" Height="400"
         WindowStartupLocation="CenterScreen"
         Background="#121212"
-        ShowInTaskbar="True"
+        ShowInTaskbar="False"
         CanResize="False">
 
     <!-- Mini Dashboard (shows when tray is clicked) -->

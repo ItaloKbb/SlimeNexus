@@ -87,6 +87,11 @@ public sealed partial class InstallerWizardViewModel : ViewModelBase
             await CurrentStep.OnEnteringAsync();
             UpdateNavigationState();
         }
+        else
+        {
+            // Last step — finish the wizard
+            Finish();
+        }
     }
 
     [RelayCommand]

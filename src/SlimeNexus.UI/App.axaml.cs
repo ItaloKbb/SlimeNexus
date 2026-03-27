@@ -26,6 +26,8 @@ public partial class App : Application
     /// </summary>
     public static T? TryGetService<T>() where T : class => Services.GetService<T>();
 
+    private TrayIconWindow? _trayWindow;
+
     public override void Initialize()
     {
         AvaloniaXamlLoader.Load(this);
@@ -33,49 +35,144 @@ public partial class App : Application
 
     public override async void OnFrameworkInitializationCompleted()
     {
-        if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+        try
         {
-            // Set shutdown mode to explicit (app keeps running in background)
-            desktop.ShutdownMode = ShutdownMode.OnExplicitShutdown;
-
-            // Check if this is first run and show installer wizard
-            if (ShouldShowInstaller())
+            if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
             {
-                var installerWindow = Services.GetRequiredService<InstallerWindow>();
-                desktop.MainWindow = installerWindow;
-                installerWindow.Show();
+                // Set shutdown mode to explicit (app keeps running in background)
+                desktop.ShutdownMode = ShutdownMode.OnExplicitShutdown;
 
-                // Wait for installer to complete
-                installerWindow.Closed += (_, _) =>
+                // Check if this is first run and show installer wizard
+                if (ShouldShowInstaller())
                 {
-                    if (installerWindow.InstallationResult == true)
+                    var installerWindow = Services.GetRequiredService<InstallerWindow>();
+                    desktop.MainWindow = installerWindow;
+                    installerWindow.Show();
+
+                    // Wait for installer to complete
+                    installerWindow.Closed += (_, _) =>
                     {
-                        // Installation successful, mark as complete and show main app
-                        MarkInstallationComplete();
-                        ShowMainApp(desktop);
-                    }
-                    else
-                    {
-                        // Installation cancelled, exit app
-                        desktop.Shutdown(1);
-                    }
-                };
+                        if (installerWindow.InstallationResult == true)
+                        {
+                            // Installation successful, mark as complete and show main app
+                            MarkInstallationComplete();
+                            ShowMainApp(desktop);
+                        }
+                        else
+                        {
+                            // Installation cancelled, exit app
+                            desktop.Shutdown(1);
+                        }
+                    };
+                }
+                else
+                {
+                    // Normal startup - show tray icon
+                    ShowMainApp(desktop);
+                }
             }
-            else
+
+            base.OnFrameworkInitializationCompleted();
+        }
+        catch (Exception ex)
+        {
+            try
             {
-                // Normal startup - show tray icon
-                ShowMainApp(desktop);
+                var logDir = Path.Combine(
+                    Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "SlimeNexus");
+                Directory.CreateDirectory(logDir);
+                File.WriteAllText(Path.Combine(logDir, "crash.log"),
+                    $"[{DateTime.UtcNow:O}] OnFrameworkInitializationCompleted error:\n{ex}");
+            }
+            catch { }
+
+            if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop2)
+            {
+                desktop2.Shutdown(1);
             }
         }
-
-        base.OnFrameworkInitializationCompleted();
     }
 
-    private static void ShowMainApp(IClassicDesktopStyleApplicationLifetime desktop)
+    private void ShowMainApp(IClassicDesktopStyleApplicationLifetime desktop)
     {
-        var trayWindow = Services.GetRequiredService<TrayIconWindow>();
-        desktop.MainWindow = trayWindow;
-        trayWindow.Show();
+        _trayWindow = Services.GetRequiredService<TrayIconWindow>();
+        desktop.MainWindow = _trayWindow;
+
+        // Don't show the window — it starts hidden in the tray
+        SetupTrayIconEvents(desktop);
+    }
+
+    private void SetupTrayIconEvents(IClassicDesktopStyleApplicationLifetime desktop)
+    {
+        var trayIcons = TrayIcon.GetIcons(this);
+        if (trayIcons is null || trayIcons.Count == 0) return;
+
+        var trayIcon = trayIcons[0];
+        trayIcon.Clicked += (_, _) => ToggleTrayWindow();
+
+        if (trayIcon.Menu is not { } menu) return;
+
+        foreach (var item in menu.Items)
+        {
+            if (item is NativeMenuItem menuItem)
+            {
+                switch (menuItem.Header)
+                {
+                    case "Abrir Painel":
+                        menuItem.Click += (_, _) => ShowTrayWindow();
+                        break;
+                    case "Dashboard":
+                        menuItem.Click += (_, _) =>
+                        {
+                            var mainWindow = Services.GetRequiredService<MainWindow>();
+                            mainWindow.Show();
+                            mainWindow.Activate();
+                        };
+                        break;
+                    case "Info de Hardware":
+                        menuItem.Click += (_, _) =>
+                        {
+                            var hwWindow = Services.GetRequiredService<HardwareDashboardWindow>();
+                            hwWindow.Show();
+                            hwWindow.Activate();
+                        };
+                        break;
+                    case "Sair":
+                        menuItem.Click += (_, _) =>
+                        {
+                            if (_trayWindow is not null)
+                                _trayWindow.ForceClose = true;
+                            desktop.Shutdown();
+                        };
+                        break;
+                }
+            }
+        }
+    }
+
+    private void ToggleTrayWindow()
+    {
+        if (_trayWindow is null) return;
+
+        if (_trayWindow.IsVisible)
+        {
+            _trayWindow.Hide();
+        }
+        else
+        {
+            ShowTrayWindow();
+        }
+    }
+
+    private void ShowTrayWindow()
+    {
+        if (_trayWindow is null) return;
+
+        _trayWindow.Show();
+        _trayWindow.Activate();
+
+        if (_trayWindow.WindowState == WindowState.Minimized)
+            _trayWindow.WindowState = WindowState.Normal;
     }
 
     private static bool ShouldShowInstaller()

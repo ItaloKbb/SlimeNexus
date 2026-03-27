@@ -19,6 +19,7 @@ public sealed class InstallerService
     private readonly IHardwareProber _hardwareProber;
     private readonly IAiProvider _aiProvider;
     private readonly ILogger<InstallerService> _logger;
+    private string? _ollamaPath;
 
     public const string AppName = "SlimeNexus";
     public const string AppVersion = "1.0.0";
@@ -162,26 +163,7 @@ public sealed class InstallerService
     /// </summary>
     public bool IsOllamaInstalled()
     {
-        try
-        {
-            var startInfo = new ProcessStartInfo
-            {
-                FileName = "ollama",
-                Arguments = "--version",
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                UseShellExecute = false,
-                CreateNoWindow = true
-            };
-
-            using var process = Process.Start(startInfo);
-            process?.WaitForExit(5000);
-            return process?.ExitCode == 0;
-        }
-        catch
-        {
-            return false;
-        }
+        return ResolveOllamaPath() is not null;
     }
 
     /// <summary>
@@ -226,7 +208,19 @@ public sealed class InstallerService
 
             if (process.ExitCode == 0 || output.Contains("already installed", StringComparison.OrdinalIgnoreCase))
             {
-                progress?.Report("✓ Ollama instalado com sucesso!");
+                // Refresh PATH so the current process can find the newly installed ollama
+                RefreshPathFromRegistry();
+                _ollamaPath = null; // Reset cached path so it's re-resolved
+
+                if (ResolveOllamaPath() is not null)
+                {
+                    progress?.Report("✓ Ollama instalado e configurado no PATH.");
+                }
+                else
+                {
+                    progress?.Report("✓ Ollama instalado (PATH será atualizado após reinício).");
+                }
+
                 return true;
             }
 
@@ -253,13 +247,31 @@ public sealed class InstallerService
         _logger.LogInformation("Downloading model: {Model}", model);
 
         // Ensure Ollama service is running
-        await EnsureOllamaServiceRunningAsync(cancellationToken);
+        try
+        {
+            await EnsureOllamaServiceRunningAsync(cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to ensure Ollama service is running");
+            progress?.Report(new ModelDownloadProgress(-1, $"✗ Falha ao iniciar serviço Ollama: {ex.Message}"));
+            return false;
+        }
+
+        var ollamaPath = ResolveOllamaPath();
+        if (ollamaPath is null)
+        {
+            var errorMsg = "Executável 'ollama' não encontrado no PATH nem em diretórios conhecidos de instalação. Tente reiniciar o computador após a instalação do Ollama.";
+            _logger.LogError(errorMsg);
+            progress?.Report(new ModelDownloadProgress(-1, $"✗ {errorMsg}"));
+            return false;
+        }
 
         try
         {
             var startInfo = new ProcessStartInfo
             {
-                FileName = "ollama",
+                FileName = ollamaPath,
                 Arguments = $"pull {model}",
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
@@ -268,7 +280,29 @@ public sealed class InstallerService
             };
 
             using var process = Process.Start(startInfo);
-            if (process is null) return false;
+            if (process is null)
+            {
+                var errorMsg = $"Não foi possível iniciar o processo '{ollamaPath}'.";
+                _logger.LogError(errorMsg);
+                progress?.Report(new ModelDownloadProgress(-1, $"✗ {errorMsg}"));
+                return false;
+            }
+
+            // Read stderr in background (ollama pull outputs progress to stderr)
+            var stderrTask = Task.Run(async () =>
+            {
+                var lines = new List<string>();
+                while (!process.StandardError.EndOfStream)
+                {
+                    var line = await process.StandardError.ReadLineAsync(cancellationToken);
+                    if (line is not null)
+                    {
+                        lines.Add(line);
+                        ParseAndReportProgress(line, progress);
+                    }
+                }
+                return lines;
+            }, cancellationToken);
 
             // Parse progress from stdout
             while (!process.StandardOutput.EndOfStream)
@@ -281,6 +315,7 @@ public sealed class InstallerService
             }
 
             await process.WaitForExitAsync(cancellationToken);
+            var stderrLines = await stderrTask;
 
             if (process.ExitCode == 0)
             {
@@ -288,13 +323,22 @@ public sealed class InstallerService
                 return true;
             }
 
-            var error = await process.StandardError.ReadToEndAsync(cancellationToken);
-            _logger.LogError("Model download failed: {Error}", error);
+            var errorOutput = string.Join(Environment.NewLine, stderrLines);
+            _logger.LogError("Model download failed (exit code {ExitCode}): {Error}", process.ExitCode, errorOutput);
+            progress?.Report(new ModelDownloadProgress(-1, $"✗ Falha no download (código {process.ExitCode}): {errorOutput}"));
             return false;
         }
-        catch (Exception ex)
+        catch (System.ComponentModel.Win32Exception ex)
+        {
+            var errorMsg = "Comando 'ollama' não encontrado. O Ollama pode não estar no PATH do sistema. Tente reiniciar o computador após a instalação do Ollama.";
+            _logger.LogError(ex, errorMsg);
+            progress?.Report(new ModelDownloadProgress(-1, $"✗ {errorMsg}"));
+            return false;
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
         {
             _logger.LogError(ex, "Exception during model download");
+            progress?.Report(new ModelDownloadProgress(-1, $"✗ Erro inesperado: {ex.Message}"));
             return false;
         }
     }
@@ -465,19 +509,23 @@ public sealed class InstallerService
             return;
 
         _logger.LogInformation("Starting Ollama service...");
-        
+
+        var ollamaPath = ResolveOllamaPath()
+            ?? throw new InvalidOperationException(
+                "Executável 'ollama' não encontrado. Verifique se o Ollama está instalado.");
+
         try
         {
             var startInfo = new ProcessStartInfo
             {
-                FileName = "ollama",
+                FileName = ollamaPath,
                 Arguments = "serve",
                 UseShellExecute = false,
                 CreateNoWindow = true
             };
 
             Process.Start(startInfo);
-            
+
             // Wait for service to be ready
             for (int i = 0; i < 10; i++)
             {
@@ -489,6 +537,86 @@ public sealed class InstallerService
         catch (Exception ex)
         {
             _logger.LogWarning(ex, "Failed to start Ollama service");
+        }
+    }
+
+    /// <summary>
+    /// Resolves the full path to the ollama executable.
+    /// Checks the current PATH first, then known installation directories.
+    /// Caches the result for subsequent calls.
+    /// </summary>
+    private string? ResolveOllamaPath()
+    {
+        if (_ollamaPath is not null && File.Exists(_ollamaPath))
+            return _ollamaPath;
+
+        // Try running ollama from PATH
+        try
+        {
+            var startInfo = new ProcessStartInfo
+            {
+                FileName = "ollama",
+                Arguments = "--version",
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false,
+                CreateNoWindow = true
+            };
+
+            using var process = Process.Start(startInfo);
+            process?.WaitForExit(5000);
+            if (process?.ExitCode == 0)
+            {
+                _ollamaPath = "ollama";
+                return _ollamaPath;
+            }
+        }
+        catch
+        {
+            // Not in PATH, try known locations
+        }
+
+        // Search known Ollama installation directories
+        string[] knownPaths =
+        [
+            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Programs", "Ollama", "ollama.exe"),
+            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "Ollama", "ollama.exe"),
+            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "AppData", "Local", "Ollama", "ollama.exe"),
+            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Ollama", "ollama.exe"),
+        ];
+
+        foreach (var path in knownPaths)
+        {
+            if (File.Exists(path))
+            {
+                _logger.LogInformation("Found Ollama at: {Path}", path);
+                _ollamaPath = path;
+                return _ollamaPath;
+            }
+        }
+
+        _logger.LogWarning("Ollama executable not found in PATH or known locations");
+        return null;
+    }
+
+    /// <summary>
+    /// Refreshes the process PATH environment variable from the system registry
+    /// so newly installed programs become visible without restarting the app.
+    /// </summary>
+    private void RefreshPathFromRegistry()
+    {
+        try
+        {
+            var machinePath = Environment.GetEnvironmentVariable("PATH", EnvironmentVariableTarget.Machine) ?? "";
+            var userPath = Environment.GetEnvironmentVariable("PATH", EnvironmentVariableTarget.User) ?? "";
+            var newPath = $"{userPath};{machinePath}";
+
+            Environment.SetEnvironmentVariable("PATH", newPath, EnvironmentVariableTarget.Process);
+            _logger.LogInformation("Process PATH refreshed from registry");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to refresh PATH from registry");
         }
     }
 
@@ -509,7 +637,7 @@ public sealed class InstallerService
                 }
             }
         }
-        
+
         progress.Report(new ModelDownloadProgress(-1, line));
     }
 
