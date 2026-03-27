@@ -25,6 +25,7 @@ public static class DependencyInjection
         services.AddTransient<HardwareDashboardViewModel>();
         services.AddTransient<PetStatusViewModel>();
         services.AddTransient<TrayIconViewModel>();
+        services.AddTransient<ChatViewModel>();
 
         // Installer ViewModels
         services.AddTransient<InstallerWizardViewModel>();

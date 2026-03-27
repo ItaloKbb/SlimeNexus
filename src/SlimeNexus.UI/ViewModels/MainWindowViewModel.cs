@@ -7,6 +7,7 @@ namespace SlimeNexus.UI.ViewModels;
 
 /// <summary>
 /// ViewModel for the main application window.
+/// Manages tab navigation and overall app state.
 /// </summary>
 public partial class MainWindowViewModel : ViewModelBase
 {
@@ -23,16 +24,16 @@ public partial class MainWindowViewModel : ViewModelBase
     private bool _isPetSelected;
 
     [ObservableProperty]
+    private bool _isChatSelected;
+
+    [ObservableProperty]
     private bool _isTasksSelected;
 
     [ObservableProperty]
     private bool _isAiOnline;
 
     [ObservableProperty]
-    private string _statusText = "Checking...";
-
-    [ObservableProperty]
-    private object? _currentView;
+    private string _statusText = "Verificando...";
 
     public MainWindowViewModel(
         IAiProvider aiProvider,
@@ -46,29 +47,57 @@ public partial class MainWindowViewModel : ViewModelBase
 
     partial void OnIsHomeSelectedChanged(bool value)
     {
-        if (value) NavigateTo("home");
+        if (value) _logger.LogDebug("Navigating to: home");
     }
 
     partial void OnIsHardwareSelectedChanged(bool value)
     {
-        if (value) NavigateTo("hardware");
+        if (value) _logger.LogDebug("Navigating to: hardware");
     }
 
     partial void OnIsPetSelectedChanged(bool value)
     {
-        if (value) NavigateTo("pet");
+        if (value) _logger.LogDebug("Navigating to: pet");
+    }
+
+    partial void OnIsChatSelectedChanged(bool value)
+    {
+        if (value) _logger.LogDebug("Navigating to: chat");
     }
 
     partial void OnIsTasksSelectedChanged(bool value)
     {
-        if (value) NavigateTo("tasks");
+        if (value) _logger.LogDebug("Navigating to: tasks");
     }
 
-    private void NavigateTo(string view)
+    [RelayCommand]
+    private void GoToChat()
     {
-        _logger.LogDebug("Navigating to: {View}", view);
-        // Views will be set by the ContentControl DataTemplate
-        CurrentView = view;
+        IsHomeSelected = false;
+        IsHardwareSelected = false;
+        IsPetSelected = false;
+        IsTasksSelected = false;
+        IsChatSelected = true;
+    }
+
+    [RelayCommand]
+    private void GoToHardware()
+    {
+        IsHomeSelected = false;
+        IsChatSelected = false;
+        IsPetSelected = false;
+        IsTasksSelected = false;
+        IsHardwareSelected = true;
+    }
+
+    [RelayCommand]
+    private void GoToPet()
+    {
+        IsHomeSelected = false;
+        IsHardwareSelected = false;
+        IsChatSelected = false;
+        IsTasksSelected = false;
+        IsPetSelected = true;
     }
 
     private async Task CheckStatusAsync()
@@ -81,7 +110,7 @@ public partial class MainWindowViewModel : ViewModelBase
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to check AI status");
-            StatusText = "Error";
+            StatusText = "Erro";
         }
     }
 }

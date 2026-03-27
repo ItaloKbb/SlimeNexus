@@ -1,0 +1,148 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:SlimeNexus.UI.ViewModels"
+             x:Class="SlimeNexus.UI.Views.PetTabView"
+             x:DataType="vm:PetStatusViewModel">
+
+    <ScrollViewer>
+        <StackPanel Spacing="16" Margin="4">
+
+            <!-- Pet Header Card -->
+            <Border CornerRadius="16"
+                    Padding="24">
+                <Border.Background>
+                    <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
+                        <GradientStop Offset="0" Color="#0d3320" />
+                        <GradientStop Offset="1" Color="#1a5c3a" />
+                    </LinearGradientBrush>
+                </Border.Background>
+                <StackPanel Orientation="Horizontal" Spacing="20">
+                    <!-- Pet Avatar -->
+                    <Border Width="100" Height="100"
+                            CornerRadius="50"
+                            Background="{StaticResource SlimePrimaryBrush}">
+                        <TextBlock Text="{Binding PetStateEmoji}"
+                                   FontSize="48"
+                                   HorizontalAlignment="Center"
+                                   VerticalAlignment="Center" />
+                    </Border>
+
+                    <StackPanel VerticalAlignment="Center" Spacing="6">
+                        <TextBlock Text="{Binding PetName}" FontSize="24" FontWeight="Bold" />
+                        <TextBlock Text="{Binding PetState}" FontSize="14" Opacity="0.7" />
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <Border Background="#ffffff20" CornerRadius="6" Padding="8,4">
+                                <TextBlock Text="{Binding LevelText}" FontSize="11" />
+                            </Border>
+                            <Border Background="#ffffff20" CornerRadius="6" Padding="8,4">
+                                <TextBlock Text="{Binding TasksCompletedToday, StringFormat='{}{0} tasks'}" FontSize="11" />
+                            </Border>
+                        </StackPanel>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+
+            <!-- Stats Grid -->
+            <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto" Margin="0,4,0,0">
+                <Grid.Styles>
+                    <Style Selector="Border.pet-stat">
+                        <Setter Property="Background" Value="#1E1E2E" />
+                        <Setter Property="CornerRadius" Value="12" />
+                        <Setter Property="Padding" Value="16" />
+                    </Style>
+                </Grid.Styles>
+
+                <!-- XP -->
+                <Border Grid.Row="0" Grid.Column="0" Classes="pet-stat" Margin="0,0,6,12">
+                    <StackPanel Spacing="8">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <TextBlock Text="⭐" FontSize="16" />
+                            <TextBlock Text="Experiência" FontWeight="SemiBold" FontSize="13" />
+                        </StackPanel>
+                        <TextBlock Text="{Binding XpText}" FontSize="12" Opacity="0.6" />
+                        <ProgressBar Value="{Binding XpProgress}"
+                                     Maximum="100"
+                                     Height="8"
+                                     CornerRadius="4"
+                                     Foreground="{StaticResource SlimeAccentBrush}" />
+                    </StackPanel>
+                </Border>
+
+                <!-- Happiness -->
+                <Border Grid.Row="0" Grid.Column="1" Classes="pet-stat" Margin="6,0,0,12">
+                    <StackPanel Spacing="8">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <TextBlock Text="😊" FontSize="16" />
+                            <TextBlock Text="Felicidade" FontWeight="SemiBold" FontSize="13" />
+                        </StackPanel>
+                        <TextBlock Text="{Binding HappinessPercent, StringFormat='{}{0}%'}" FontSize="12" Opacity="0.6" />
+                        <ProgressBar Value="{Binding HappinessPercent}"
+                                     Maximum="100"
+                                     Height="8"
+                                     CornerRadius="4"
+                                     Foreground="#FFD54F" />
+                    </StackPanel>
+                </Border>
+
+                <!-- Energy -->
+                <Border Grid.Row="1" Grid.Column="0" Classes="pet-stat" Margin="0,0,6,0">
+                    <StackPanel Spacing="8">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <TextBlock Text="⚡" FontSize="16" />
+                            <TextBlock Text="Energia" FontWeight="SemiBold" FontSize="13" />
+                        </StackPanel>
+                        <TextBlock Text="{Binding EnergyPercent, StringFormat='{}{0}%'}" FontSize="12" Opacity="0.6" />
+                        <ProgressBar Value="{Binding EnergyPercent}"
+                                     Maximum="100"
+                                     Height="8"
+                                     CornerRadius="4"
+                                     Foreground="#64B5F6" />
+                    </StackPanel>
+                </Border>
+
+                <!-- Tasks -->
+                <Border Grid.Row="1" Grid.Column="1" Classes="pet-stat" Margin="6,0,0,0">
+                    <StackPanel Spacing="8">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <TextBlock Text="📋" FontSize="16" />
+                            <TextBlock Text="Tasks Hoje" FontWeight="SemiBold" FontSize="13" />
+                        </StackPanel>
+                        <TextBlock Text="{Binding TasksCompletedToday, StringFormat='{}{0} concluídas'}"
+                                   FontSize="18" FontWeight="Bold" />
+                    </StackPanel>
+                </Border>
+            </Grid>
+
+            <!-- Actions -->
+            <Border Background="#1E1E2E" CornerRadius="12" Padding="20">
+                <StackPanel Spacing="12">
+                    <TextBlock Text="Ações" FontSize="16" FontWeight="SemiBold" />
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <StackPanel.Styles>
+                            <Style Selector="Button.pet-action">
+                                <Setter Property="Padding" Value="20,12" />
+                                <Setter Property="CornerRadius" Value="10" />
+                                <Setter Property="FontSize" Value="14" />
+                                <Setter Property="BorderThickness" Value="0" />
+                            </Style>
+                        </StackPanel.Styles>
+
+                        <Button Classes="pet-action"
+                                Content="🍎 Alimentar"
+                                Command="{Binding FeedCommand}"
+                                Background="#2d4a2e" />
+                        <Button Classes="pet-action"
+                                Content="💤 Descansar"
+                                Command="{Binding RestCommand}"
+                                Background="#2e3d5a" />
+                        <Button Classes="pet-action"
+                                Content="🎮 Brincar"
+                                Command="{Binding PlayCommand}"
+                                Background="#4a2d5a" />
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

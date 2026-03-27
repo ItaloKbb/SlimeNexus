@@ -1,0 +1,157 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:SlimeNexus.UI.ViewModels"
+             x:Class="SlimeNexus.UI.Views.ChatView"
+             x:DataType="vm:ChatViewModel">
+
+    <Grid RowDefinitions="Auto,*,Auto">
+
+        <!-- Header -->
+        <Border Grid.Row="0" Background="#1a1a2e" CornerRadius="12" Padding="16" Margin="0,0,0,12">
+            <Grid ColumnDefinitions="*,Auto">
+                <StackPanel Spacing="4">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <TextBlock Text="🤖" FontSize="20" VerticalAlignment="Center" />
+                        <TextBlock Text="AI Chat" FontSize="18" FontWeight="Bold" VerticalAlignment="Center" />
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <Ellipse Width="8" Height="8">
+                            <Ellipse.Fill>
+                                <SolidColorBrush Color="{Binding IsAiConnected, Converter={StaticResource BoolToGreenRedConverter}}" />
+                            </Ellipse.Fill>
+                        </Ellipse>
+                        <TextBlock Text="{Binding AiStatusText}" FontSize="11" Opacity="0.7" />
+                        <TextBlock Text="·" FontSize="11" Opacity="0.4" />
+                        <TextBlock Text="{Binding ModelName}" FontSize="11" Opacity="0.5" />
+                    </StackPanel>
+                </StackPanel>
+                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6">
+                    <Button Content="🔄"
+                            Command="{Binding ReconnectCommand}"
+                            ToolTip.Tip="Reconectar"
+                            Padding="8,6"
+                            Background="Transparent"
+                            CornerRadius="6" />
+                    <Button Content="🗑️"
+                            Command="{Binding ClearChatCommand}"
+                            ToolTip.Tip="Limpar chat"
+                            Padding="8,6"
+                            Background="Transparent"
+                            CornerRadius="6" />
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- Messages -->
+        <Border Grid.Row="1" Background="#0d0d1a" CornerRadius="12" Padding="4" Margin="0,0,0,12">
+            <ScrollViewer Name="MessagesScroll"
+                          VerticalScrollBarVisibility="Auto"
+                          HorizontalScrollBarVisibility="Disabled">
+                <ItemsControl ItemsSource="{Binding Messages}" Margin="8">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate DataType="vm:ChatMessage">
+                            <Panel Margin="0,4">
+
+                                <!-- User message -->
+                                <Border IsVisible="{Binding IsUser}"
+                                        Background="#6c5ce7"
+                                        CornerRadius="16,16,4,16"
+                                        Padding="14,10"
+                                        HorizontalAlignment="Right"
+                                        MaxWidth="500">
+                                    <StackPanel Spacing="4">
+                                        <TextBlock Text="{Binding Content}"
+                                                   TextWrapping="Wrap"
+                                                   Foreground="White"
+                                                   FontSize="13" />
+                                        <TextBlock Text="{Binding Timestamp, StringFormat='{}{0:HH:mm}'}"
+                                                   FontSize="9"
+                                                   Opacity="0.5"
+                                                   Foreground="White"
+                                                   HorizontalAlignment="Right" />
+                                    </StackPanel>
+                                </Border>
+
+                                <!-- Assistant message -->
+                                <Border IsVisible="{Binding IsAssistant}"
+                                        Background="#1E1E2E"
+                                        CornerRadius="16,16,16,4"
+                                        Padding="14,10"
+                                        HorizontalAlignment="Left"
+                                        MaxWidth="500">
+                                    <StackPanel Spacing="4">
+                                        <TextBlock Text="{Binding Content}"
+                                                   TextWrapping="Wrap"
+                                                   FontSize="13" />
+                                        <TextBlock Text="{Binding Timestamp, StringFormat='{}{0:HH:mm}'}"
+                                                   FontSize="9"
+                                                   Opacity="0.4"
+                                                   HorizontalAlignment="Left" />
+                                    </StackPanel>
+                                </Border>
+
+                                <!-- System message -->
+                                <Border IsVisible="{Binding IsSystem}"
+                                        HorizontalAlignment="Center"
+                                        Padding="12,6"
+                                        CornerRadius="12"
+                                        Background="#1a1a2e"
+                                        Opacity="0.8">
+                                    <TextBlock Text="{Binding Content}"
+                                               TextWrapping="Wrap"
+                                               FontSize="12"
+                                               HorizontalAlignment="Center"
+                                               Opacity="0.7" />
+                                </Border>
+
+                            </Panel>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </ScrollViewer>
+        </Border>
+
+        <!-- Generating indicator -->
+        <Border Grid.Row="1"
+                IsVisible="{Binding IsGenerating}"
+                VerticalAlignment="Bottom"
+                HorizontalAlignment="Left"
+                Background="#1E1E2E"
+                CornerRadius="12"
+                Padding="14,8"
+                Margin="12,0,0,20">
+            <StackPanel Orientation="Horizontal" Spacing="8">
+                <ProgressBar IsIndeterminate="True" Width="60" Height="4" CornerRadius="2" />
+                <TextBlock Text="Pensando..." FontSize="12" Opacity="0.6" />
+            </StackPanel>
+        </Border>
+
+        <!-- Input -->
+        <Border Grid.Row="2" Background="#1a1a2e" CornerRadius="12" Padding="8">
+            <Grid ColumnDefinitions="*,Auto">
+                <TextBox Text="{Binding UserMessage, Mode=TwoWay}"
+                         Watermark="Digite sua mensagem..."
+                         Background="#0d0d1a"
+                         CornerRadius="10"
+                         Padding="14,10"
+                         FontSize="13"
+                         BorderThickness="0"
+                         AcceptsReturn="False"
+                         KeyDown="OnInputKeyDown" />
+                <Button Grid.Column="1"
+                        Content="➤"
+                        Command="{Binding SendMessageCommand}"
+                        FontSize="18"
+                        Width="44" Height="44"
+                        Padding="0"
+                        CornerRadius="10"
+                        Background="#6c5ce7"
+                        Foreground="White"
+                        Margin="8,0,0,0"
+                        HorizontalContentAlignment="Center"
+                        VerticalContentAlignment="Center" />
+            </Grid>
+        </Border>
+
+    </Grid>
+</UserControl>
