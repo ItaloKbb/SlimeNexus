@@ -15,6 +15,7 @@ namespace SlimeNexus.Infrastructure.Executors;
 public sealed class OpenClawExecutor : ITaskExecutor
 {
     private readonly ILogger<OpenClawExecutor> _logger;
+    private readonly IAiProvider _aiProvider;
     private readonly OpenClawOptions _options;
     private readonly HttpClient _httpClient;
 
@@ -27,10 +28,12 @@ public sealed class OpenClawExecutor : ITaskExecutor
     public OpenClawExecutor(
         ILogger<OpenClawExecutor> logger,
         HttpClient httpClient,
+        IAiProvider aiProvider,
         OpenClawOptions? options = null)
     {
         _logger = logger;
         _httpClient = httpClient;
+        _aiProvider = aiProvider;
         _options = options ?? new OpenClawOptions();
 
         _httpClient.BaseAddress ??= new Uri(_options.GatewayUrl);
@@ -45,6 +48,9 @@ public sealed class OpenClawExecutor : ITaskExecutor
         TaskTypes.GitCommit,
         TaskTypes.TestRun,
         TaskTypes.BuildProject,
+        TaskTypes.GenerateDocs,
+        TaskTypes.Refactor,
+        TaskTypes.SecurityScan,
         TaskTypes.Custom
     ];
 
@@ -85,6 +91,9 @@ public sealed class OpenClawExecutor : ITaskExecutor
                 TaskTypes.GitCommit => await ExecuteGitCommitValidationAsync(metadata, executionPlan, cancellationToken),
                 TaskTypes.TestRun => await ExecuteTestRunAsync(metadata, executionPlan, cancellationToken),
                 TaskTypes.BuildProject => await ExecuteBuildProjectAsync(metadata, executionPlan, cancellationToken),
+                TaskTypes.GenerateDocs => await ExecuteGenerateDocsAsync(metadata, executionPlan, cancellationToken),
+                TaskTypes.Refactor => await ExecuteRefactorAsync(metadata, executionPlan, cancellationToken),
+                TaskTypes.SecurityScan => await ExecuteSecurityScanAsync(metadata, executionPlan, cancellationToken),
                 TaskTypes.Custom => await ExecuteCustomTaskAsync(metadata, executionPlan, cancellationToken),
                 _ => throw new NotSupportedException($"Task type '{metadata.TaskType}' is not supported")
             };
@@ -152,13 +161,12 @@ public sealed class OpenClawExecutor : ITaskExecutor
             }
         }
 
-        // Check OpenClaw gateway availability (if using gateway mode)
-        if (_options.UseGateway)
+        // Check if AI provider is available for AI-powered tasks
+        if (metadata.TaskType is TaskTypes.CodeReview or TaskTypes.Custom)
         {
-            var isAvailable = await CheckGatewayAvailabilityAsync(cancellationToken);
-            if (!isAvailable)
+            if (!await _aiProvider.IsAvailableAsync(cancellationToken))
             {
-                return (false, "OpenClaw gateway is not available");
+                return (false, "Serviço de IA local (Ollama) não está disponível. Verifique se o Ollama está em execução.");
             }
         }
 
@@ -180,25 +188,91 @@ public sealed class OpenClawExecutor : ITaskExecutor
                 ErrorCodes.InvalidMetadata);
         }
 
-        // Execute via OpenClaw gateway or direct process
-        var command = BuildOpenClawCommand("code-review", new
+        var csFiles = Directory.GetFiles(metadata.TargetFolder, "*.cs", SearchOption.AllDirectories);
+        var staticIssues = new List<string>();
+        var totalFiles = 0;
+        var totalLines = 0;
+        var codeSnippets = new List<(string Path, string Content)>();
+
+        foreach (var file in csFiles)
         {
-            path = metadata.TargetFolder,
-            plan = executionPlan,
-            context = metadata.ContextPrompt
-        });
+            cancellationToken.ThrowIfCancellationRequested();
 
-        var output = await ExecuteCommandAsync(command, metadata.TimeoutSeconds, cancellationToken);
+            var relativePath = Path.GetRelativePath(metadata.TargetFolder, file);
+            if (relativePath.Contains($"bin{Path.DirectorySeparatorChar}", StringComparison.Ordinal) ||
+                relativePath.Contains($"obj{Path.DirectorySeparatorChar}", StringComparison.Ordinal))
+                continue;
 
-        // Parse output to determine success
-        var success = output.Contains("✓", StringComparison.Ordinal) || 
-                      output.Contains("passed", StringComparison.OrdinalIgnoreCase);
+            var lines = await File.ReadAllLinesAsync(file, cancellationToken);
+            totalFiles++;
+            totalLines += lines.Length;
 
-        var xp = success ? CalculateXp(25, metadata.XpMultiplier, metadata.PetState) : 0;
+            // Static checks
+            if (lines.Length > 500)
+                staticIssues.Add($"⚠ {relativePath}: arquivo longo ({lines.Length} linhas)");
 
-        return success
-            ? ValidationResult.Success(metadata.RequestId, "Code review completed", xp, detailedOutput: output)
-            : ValidationResult.Failure(metadata.RequestId, "Code review found issues", ErrorCodes.ExecutionFailed, output);
+            for (var i = 0; i < lines.Length; i++)
+            {
+                var trimmed = lines[i].TrimStart();
+                if (trimmed.Contains("TODO", StringComparison.OrdinalIgnoreCase) ||
+                    trimmed.Contains("FIXME", StringComparison.OrdinalIgnoreCase) ||
+                    trimmed.Contains("HACK", StringComparison.OrdinalIgnoreCase))
+                    staticIssues.Add($"📌 {relativePath}:{i + 1}: {trimmed.Trim()}");
+            }
+
+            for (var i = 0; i < lines.Length - 2; i++)
+            {
+                if (lines[i].TrimStart().StartsWith("catch", StringComparison.Ordinal) &&
+                    lines[i + 1].Trim() == "{" && lines[i + 2].Trim() == "}")
+                    staticIssues.Add($"🔇 {relativePath}:{i + 1}: bloco catch vazio");
+            }
+
+            // Collect code for AI review (limit to keep prompt manageable)
+            var content = string.Join("\n", lines);
+            if (content.Length <= 3000)
+                codeSnippets.Add((relativePath, content));
+            else
+                codeSnippets.Add((relativePath, string.Join("\n", lines.Take(80)) + "\n// ... (truncated)"));
+        }
+
+        // AI-powered review via local Ollama model
+        var aiReview = string.Empty;
+        try
+        {
+            var codeForReview = string.Join("\n\n", codeSnippets
+                .Take(5)
+                .Select(s => $"// === {s.Path} ===\n{s.Content}"));
+
+            if (codeForReview.Length > 6000)
+                codeForReview = codeForReview[..6000] + "\n// ... (truncated)";
+
+            var prompt = "Você é um revisor de código sênior. Analise o código C# abaixo e forneça uma revisão concisa em português.\n" +
+                "Aponte: bugs potenciais, problemas de segurança, melhorias de performance e boas práticas violadas.\n" +
+                "Responda de forma objetiva, usando bullet points.\n\n" +
+                codeForReview;
+
+            _logger.LogDebug("Sending code review to AI ({Length} chars)", codeForReview.Length);
+            aiReview = await _aiProvider.GenerateAsync(prompt, cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "AI review failed, returning static analysis only");
+            aiReview = "(Revisão IA indisponível — apenas análise estática)";
+        }
+
+        var detailedOutput = $"📊 Arquivos analisados: {totalFiles} ({totalLines} linhas)\n\n" +
+                             $"🔎 Análise Estática ({staticIssues.Count} itens):\n" +
+                             (staticIssues.Count > 0 ? string.Join("\n", staticIssues.Take(30)) : "Nenhum problema encontrado ✓") +
+                             $"\n\n🤖 Revisão IA:\n{aiReview}";
+
+        var xp = CalculateXp(25, metadata.XpMultiplier, metadata.PetState);
+
+        return ValidationResult.Success(
+            metadata.RequestId,
+            $"Code review concluído — {totalFiles} arquivos analisados, {staticIssues.Count} ponto(s) estáticos",
+            xp,
+            happinessBonus: staticIssues.Count == 0 ? 15 : 10,
+            detailedOutput: detailedOutput);
     }
 
     private async Task<ValidationResult> ExecuteFileCleanupAsync(
@@ -356,44 +430,206 @@ public sealed class OpenClawExecutor : ITaskExecutor
             : ValidationResult.Failure(metadata.RequestId, "Build failed", ErrorCodes.ExecutionFailed, output);
     }
 
+    private async Task<ValidationResult> ExecuteGenerateDocsAsync(
+        TaskMetadata metadata,
+        string executionPlan,
+        CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(metadata.TargetFolder))
+        {
+            return ValidationResult.Failure(
+                metadata.RequestId,
+                "Documentation generation requires a target folder",
+                ErrorCodes.InvalidMetadata);
+        }
+
+        // Find all C# source files with undocumented public members
+        var csFiles = Directory.GetFiles(metadata.TargetFolder, "*.cs", SearchOption.AllDirectories);
+        var undocumentedCount = 0;
+        var processedFiles = 0;
+
+        foreach (var file in csFiles)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+
+            var content = await File.ReadAllTextAsync(file, cancellationToken);
+            var lines = content.Split('\n');
+
+            for (var i = 0; i < lines.Length; i++)
+            {
+                var line = lines[i].TrimStart();
+                if ((line.StartsWith("public ", StringComparison.Ordinal) ||
+                     line.StartsWith("protected ", StringComparison.Ordinal)) &&
+                    !line.StartsWith("//", StringComparison.Ordinal))
+                {
+                    // Check if previous non-empty line is a doc comment
+                    var prevIdx = i - 1;
+                    while (prevIdx >= 0 && string.IsNullOrWhiteSpace(lines[prevIdx])) prevIdx--;
+                    if (prevIdx < 0 || !lines[prevIdx].TrimStart().StartsWith("///", StringComparison.Ordinal))
+                    {
+                        undocumentedCount++;
+                    }
+                }
+            }
+            processedFiles++;
+        }
+
+        var message = undocumentedCount == 0
+            ? $"All public members documented in {processedFiles} files ✓"
+            : $"Found {undocumentedCount} undocumented public members across {processedFiles} files";
+
+        var xp = CalculateXp(20, metadata.XpMultiplier, metadata.PetState);
+
+        return ValidationResult.Success(
+            metadata.RequestId,
+            message,
+            xp,
+            happinessBonus: undocumentedCount == 0 ? 15 : 8,
+            detailedOutput: $"Scanned {processedFiles} .cs files, {undocumentedCount} members need documentation");
+    }
+
+    private async Task<ValidationResult> ExecuteRefactorAsync(
+        TaskMetadata metadata,
+        string executionPlan,
+        CancellationToken cancellationToken)
+    {
+        var targetPath = metadata.TargetFolder ?? Directory.GetCurrentDirectory();
+
+        // Run dotnet format to analyze and fix code style
+        var output = await RunProcessAsync(
+            "dotnet",
+            "format --verify-no-changes --verbosity diagnostic",
+            targetPath,
+            metadata.TimeoutSeconds,
+            cancellationToken);
+
+        var isClean = !output.Contains("error", StringComparison.OrdinalIgnoreCase) &&
+                      !output.Contains("would be formatted", StringComparison.OrdinalIgnoreCase);
+
+        if (!isClean)
+        {
+            // Apply formatting fixes
+            var fixOutput = await RunProcessAsync(
+                "dotnet",
+                "format --verbosity minimal",
+                targetPath,
+                metadata.TimeoutSeconds,
+                cancellationToken);
+
+            output += $"\n[AUTO-FIX]\n{fixOutput}";
+        }
+
+        var xp = CalculateXp(25, metadata.XpMultiplier, metadata.PetState);
+
+        return ValidationResult.Success(
+            metadata.RequestId,
+            isClean ? "Code is clean — no refactoring needed ✓" : "Code refactored and formatted",
+            xp,
+            happinessBonus: isClean ? 12 : 18,
+            detailedOutput: output);
+    }
+
+    private async Task<ValidationResult> ExecuteSecurityScanAsync(
+        TaskMetadata metadata,
+        string executionPlan,
+        CancellationToken cancellationToken)
+    {
+        var targetPath = metadata.TargetFolder ?? Directory.GetCurrentDirectory();
+
+        // Check for vulnerable NuGet packages
+        var output = await RunProcessAsync(
+            "dotnet",
+            "list package --vulnerable --include-transitive",
+            targetPath,
+            metadata.TimeoutSeconds,
+            cancellationToken);
+
+        var hasVulnerabilities = output.Contains("has the following vulnerable packages", StringComparison.OrdinalIgnoreCase) ||
+                                 output.Contains("Critical", StringComparison.OrdinalIgnoreCase) ||
+                                 output.Contains("High", StringComparison.OrdinalIgnoreCase);
+
+        // Also check for outdated packages
+        var outdatedOutput = await RunProcessAsync(
+            "dotnet",
+            "list package --outdated",
+            targetPath,
+            metadata.TimeoutSeconds,
+            cancellationToken);
+
+        var hasOutdated = outdatedOutput.Contains(">", StringComparison.Ordinal) &&
+                          outdatedOutput.Contains("Latest", StringComparison.OrdinalIgnoreCase);
+
+        var combinedOutput = $"[VULNERABILITY SCAN]\n{output}\n\n[OUTDATED PACKAGES]\n{outdatedOutput}";
+
+        if (hasVulnerabilities)
+        {
+            return ValidationResult.Failure(
+                metadata.RequestId,
+                "⚠ Vulnerable packages detected — review needed",
+                ErrorCodes.ExecutionFailed,
+                combinedOutput);
+        }
+
+        var xp = CalculateXp(30, metadata.XpMultiplier, metadata.PetState);
+        var message = hasOutdated
+            ? "No vulnerabilities found, but some packages are outdated"
+            : "All packages are secure and up to date ✓";
+
+        return ValidationResult.Success(
+            metadata.RequestId,
+            message,
+            xp,
+            happinessBonus: hasOutdated ? 12 : 20,
+            detailedOutput: combinedOutput);
+    }
+
     private async Task<ValidationResult> ExecuteCustomTaskAsync(
         TaskMetadata metadata,
         string executionPlan,
         CancellationToken cancellationToken)
     {
-        // Parse execution plan for custom command
-        if (string.IsNullOrWhiteSpace(executionPlan))
+        if (string.IsNullOrWhiteSpace(executionPlan) && string.IsNullOrWhiteSpace(metadata.ContextPrompt))
         {
             return ValidationResult.Failure(
                 metadata.RequestId,
-                "Custom task requires an execution plan",
+                "Custom task requires an execution plan or context prompt",
                 ErrorCodes.InvalidMetadata);
         }
 
-        // For security, custom tasks must go through OpenClaw gateway
-        if (!_options.UseGateway)
+        var prompt = new System.Text.StringBuilder();
+        prompt.AppendLine("Você é um assistente de desenvolvimento. Execute a tarefa descrita abaixo.");
+
+        if (!string.IsNullOrWhiteSpace(executionPlan))
+            prompt.AppendLine($"Plano de execução: {executionPlan}");
+
+        if (!string.IsNullOrWhiteSpace(metadata.ContextPrompt))
+            prompt.AppendLine($"Contexto adicional: {metadata.ContextPrompt}");
+
+        if (!string.IsNullOrWhiteSpace(metadata.TargetFolder))
+            prompt.AppendLine($"Pasta alvo: {metadata.TargetFolder}");
+
+        prompt.AppendLine("Responda de forma objetiva em português.");
+
+        try
         {
+            var output = await _aiProvider.GenerateAsync(prompt.ToString(), cancellationToken);
+            var xp = CalculateXp(20, metadata.XpMultiplier, metadata.PetState);
+
+            return ValidationResult.Success(
+                metadata.RequestId,
+                "Custom task completed via AI",
+                xp,
+                detailedOutput: output);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Custom task AI execution failed");
             return ValidationResult.Failure(
                 metadata.RequestId,
-                "Custom tasks require OpenClaw gateway to be enabled",
-                ErrorCodes.PreconditionFailed);
+                $"Falha na execução: {ex.Message}",
+                ErrorCodes.AiInferenceFailed,
+                ex.ToString());
         }
-
-        var command = BuildOpenClawCommand("execute", new
-        {
-            plan = executionPlan,
-            context = metadata.ContextPrompt,
-            timeout = metadata.TimeoutSeconds
-        });
-
-        var output = await ExecuteCommandAsync(command, metadata.TimeoutSeconds, cancellationToken);
-        var xp = CalculateXp(20, metadata.XpMultiplier, metadata.PetState);
-
-        return ValidationResult.Success(
-            metadata.RequestId,
-            "Custom task completed",
-            xp,
-            detailedOutput: output);
     }
 
     #endregion

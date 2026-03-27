@@ -52,6 +52,7 @@ public sealed class InstallerService
             new InstallationStep("benchmark", "Executando Benchmark", "Avaliando performance da máquina"),
             new InstallationStep("install_ollama", "Instalando Ollama", "Configurando runtime de IA local"),
             new InstallationStep("download_model", "Baixando Modelo de IA", "Pode levar alguns minutos..."),
+            new InstallationStep("configure_openclaw", "Configurando OpenClaw", "Validando habilidades de IA e executor de tarefas"),
             new InstallationStep("configure", "Finalizando Configuração", "Aplicando configurações otimizadas"),
             new InstallationStep("complete", "Instalação Completa", "SlimeNexus está pronto!")
         ];
@@ -357,6 +358,79 @@ public sealed class InstallerService
             new OllamaModelInfo("mistral:7b-instruct-q4_K_M", "Mistral 7B", 4100, MinVramMb: 6144),
             new OllamaModelInfo("codellama:7b-instruct", "CodeLlama 7B (Código)", 4100, MinVramMb: 6144)
         ];
+    }
+
+    /// <summary>
+    /// Validates that OpenClaw (AI-powered task executor) is properly configured.
+    /// Tests the local AI model with a simple code analysis prompt.
+    /// </summary>
+    public async Task<OpenClawValidationResult> ValidateOpenClawAsync(
+        IProgress<string>? progress = null,
+        CancellationToken cancellationToken = default)
+    {
+        _logger.LogInformation("Validating OpenClaw configuration...");
+        var result = new OpenClawValidationResult();
+
+        // Step 1: Check Ollama is running
+        progress?.Report("Verificando serviço Ollama...");
+        result.IsOllamaRunning = await _aiProvider.IsAvailableAsync(cancellationToken);
+
+        if (!result.IsOllamaRunning)
+        {
+            progress?.Report("Iniciando serviço Ollama...");
+            try
+            {
+                await EnsureOllamaServiceRunningAsync(cancellationToken);
+                result.IsOllamaRunning = await _aiProvider.IsAvailableAsync(cancellationToken);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to start Ollama for OpenClaw validation");
+            }
+        }
+
+        if (!result.IsOllamaRunning)
+        {
+            result.ErrorMessage = "Serviço Ollama não está acessível.";
+            progress?.Report("✗ Ollama não disponível");
+            return result;
+        }
+
+        progress?.Report("✓ Ollama rodando");
+
+        // Step 2: Test AI inference with a code analysis prompt
+        progress?.Report("Testando inferência de código...");
+        try
+        {
+            var testPrompt = "Analise este código C# e responda com 'OK' se estiver correto: public int Sum(int a, int b) => a + b;";
+            var response = await _aiProvider.GenerateAsync(testPrompt, cancellationToken);
+
+            result.AiRespondsToCode = !string.IsNullOrWhiteSpace(response);
+            result.TestResponseLength = response.Length;
+
+            if (result.AiRespondsToCode)
+            {
+                progress?.Report($"✓ IA respondeu ({response.Length} caracteres)");
+            }
+            else
+            {
+                progress?.Report("✗ IA retornou resposta vazia");
+                result.ErrorMessage = "Modelo de IA retornou resposta vazia.";
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "AI inference test failed");
+            result.ErrorMessage = $"Falha na inferência: {ex.Message}";
+            progress?.Report($"✗ Erro: {ex.Message}");
+        }
+
+        result.IsValid = result.IsOllamaRunning && result.AiRespondsToCode;
+
+        if (result.IsValid)
+            progress?.Report("✓ OpenClaw configurado e funcional!");
+
+        return result;
     }
 
     #region Private Methods
@@ -691,5 +765,14 @@ public record OllamaModelInfo(
     string DisplayName,
     ulong SizeMb,
     ulong MinVramMb);
+
+public record OpenClawValidationResult
+{
+    public bool IsValid { get; set; }
+    public bool IsOllamaRunning { get; set; }
+    public bool AiRespondsToCode { get; set; }
+    public int TestResponseLength { get; set; }
+    public string? ErrorMessage { get; set; }
+}
 
 #endregion

@@ -103,6 +103,14 @@ public sealed partial class InstallationStepViewModel : InstallerStepViewModelBa
 
         Tasks.Add(new InstallationTaskViewModel
         {
+            Id = "openclaw",
+            Name = "Configurando OpenClaw",
+            Description = "Validando habilidades de IA para tarefas",
+            Icon = "🐾"
+        });
+
+        Tasks.Add(new InstallationTaskViewModel
+        {
             Id = "configure",
             Name = "Configurando App",
             Description = "Aplicando configurações otimizadas",
@@ -189,7 +197,28 @@ public sealed partial class InstallationStepViewModel : InstallerStepViewModelBa
                 return success;
             });
 
-            // Task 4: Configure app
+            // Task 4: Configure OpenClaw
+            await ExecuteTaskAsync("openclaw", async () =>
+            {
+                var progress = new Progress<string>(msg =>
+                {
+                    CurrentTask = msg;
+                    AddLog($"  [OpenClaw] {msg}");
+                });
+
+                var result = await _installerService.ValidateOpenClawAsync(progress, _cts.Token);
+
+                if (!result.IsValid)
+                {
+                    // OpenClaw validation is non-fatal — log warning but continue
+                    AddLog($"  [OpenClaw] Aviso: {result.ErrorMessage ?? "Validação incompleta"}");
+                    AddLog("  [OpenClaw] As habilidades de IA serão configuradas na próxima inicialização.");
+                }
+
+                return true; // Always succeed — OpenClaw will retry on first use
+            });
+
+            // Task 5: Configure app
             await ExecuteTaskAsync("configure", async () =>
             {
                 CurrentTask = "Aplicando configurações...";
@@ -197,7 +226,7 @@ public sealed partial class InstallationStepViewModel : InstallerStepViewModelBa
                 return true;
             });
 
-            // Task 5: Create shortcuts
+            // Task 6: Create shortcuts
             await ExecuteTaskAsync("shortcuts", async () =>
             {
                 CurrentTask = "Criando atalhos...";

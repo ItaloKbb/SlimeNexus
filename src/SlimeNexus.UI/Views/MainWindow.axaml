@@ -142,14 +142,9 @@
                     <views:PetTabView />
                 </Panel>
 
-                <!-- Tasks Tab (placeholder) -->
+                <!-- Tasks Tab -->
                 <Panel IsVisible="{Binding IsTasksSelected}">
-                    <StackPanel Spacing="12" HorizontalAlignment="Center" VerticalAlignment="Center">
-                        <TextBlock Text="📋" FontSize="48" HorizontalAlignment="Center" />
-                        <TextBlock Text="Tasks" FontSize="20" FontWeight="Bold" HorizontalAlignment="Center" />
-                        <TextBlock Text="Em breve — gerencie suas tarefas OpenClaw aqui."
-                                   FontSize="13" Opacity="0.5" HorizontalAlignment="Center" />
-                    </StackPanel>
+                    <views:TasksView />
                 </Panel>
 
             </Panel>

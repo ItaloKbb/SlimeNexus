@@ -26,6 +26,7 @@ public static class DependencyInjection
         services.AddTransient<PetStatusViewModel>();
         services.AddTransient<TrayIconViewModel>();
         services.AddTransient<ChatViewModel>();
+        services.AddTransient<TasksViewModel>();
 
         // Installer ViewModels
         services.AddTransient<InstallerWizardViewModel>();
